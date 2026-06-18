@@ -1,0 +1,580 @@
+{
+  "users": [
+    {
+      "username": "mimi",
+      "passwordHash": "mimi123",
+      "name": "مستر ميمي",
+      "role": "admin"
+    },
+    {
+      "username": "assistant",
+      "passwordHash": "assistant123",
+      "name": "أ. أحمد (المساعد)",
+      "role": "assistant"
+    }
+  ],
+  "years": [
+    "2026",
+    "2027"
+  ],
+  "exams": [
+    {
+      "id": "exam-1",
+      "name": "امتحان الجبر الأول",
+      "grade": 1,
+      "maxScore": 20,
+      "date": "2026-03-01",
+      "year": "2026",
+      "term": "1"
+    },
+    {
+      "id": "exam-2",
+      "name": "امتحان الهندسة الأول",
+      "grade": 2,
+      "maxScore": 20,
+      "date": "2026-03-05",
+      "year": "2026",
+      "term": "1"
+    },
+    {
+      "id": "exam-3",
+      "name": "امتحان حساب المثلثات الشامل",
+      "grade": 3,
+      "maxScore": 50,
+      "date": "2026-03-10",
+      "year": "2026",
+      "term": "1"
+    }
+  ],
+  "students": [
+    {
+      "id": "1001",
+      "name": "أحمد محمد علي",
+      "phone": "01012345678",
+      "guardianPhone": "01212345678",
+      "grade": 1,
+      "year": "2026",
+      "terms": {
+        "1": {
+          "attendance": [
+            {
+              "date": "2026-03-01",
+              "status": "present"
+            },
+            {
+              "date": "2026-03-08",
+              "status": "present"
+            },
+            {
+              "date": "2026-03-15",
+              "status": "absent"
+            },
+            {
+              "date": "2026-06-18",
+              "status": "present",
+              "notes": ""
+            }
+          ],
+          "payments": [
+            {
+              "month": "سبتمبر",
+              "status": "paid",
+              "amount": 150,
+              "confirmed": true,
+              "paymentDate": "2026-06-18T11:36:04.721Z",
+              "recordedBy": "mimi"
+            },
+            {
+              "month": "أكتوبر",
+              "status": "paid",
+              "amount": 150,
+              "paymentDate": "2026-03-08",
+              "recordedBy": "assistant",
+              "confirmed": true
+            },
+            {
+              "month": "نوفمبر",
+              "status": "unpaid",
+              "amount": 150,
+              "confirmed": false
+            }
+          ],
+          "materials": [
+            {
+              "id": "m-1",
+              "name": "مذكرة الجبر ترم أول",
+              "status": "paid",
+              "price": 50,
+              "paymentDate": "2026-03-01",
+              "recordedBy": "assistant",
+              "confirmed": true
+            },
+            {
+              "id": "m-2",
+              "name": "مذكرة الهندسة ترم أول",
+              "status": "unpaid",
+              "price": 50,
+              "confirmed": false
+            }
+          ],
+          "exams": [
+            {
+              "examId": "exam-1",
+              "score": 18
+            }
+          ]
+        },
+        "2": {
+          "attendance": [],
+          "payments": [
+            {
+              "month": "فبراير",
+              "status": "unpaid",
+              "amount": 150,
+              "confirmed": false
+            },
+            {
+              "month": "مارس",
+              "status": "unpaid",
+              "amount": 150,
+              "confirmed": false
+            }
+          ],
+          "materials": [],
+          "exams": []
+        }
+      },
+      "isSuspended": false
+    },
+    {
+      "id": "2000",
+      "name": "محمد مصطفى كامل",
+      "phone": "01122334455",
+      "guardianPhone": "01555667788",
+      "grade": 2,
+      "year": "2026",
+      "terms": {
+        "1": {
+          "attendance": [
+            {
+              "date": "2026-03-01",
+              "status": "present"
+            },
+            {
+              "date": "2026-03-08",
+              "status": "excused",
+              "notes": "ظرف طبي"
+            }
+          ],
+          "payments": [
+            {
+              "month": "سبتمبر",
+              "status": "paid",
+              "amount": 150,
+              "paymentDate": "2026-03-01",
+              "recordedBy": "assistant",
+              "confirmed": true
+            }
+          ],
+          "materials": [
+            {
+              "id": "m-3",
+              "name": "مذكرة الهندسة ترم أول",
+              "status": "paid",
+              "price": 50,
+              "paymentDate": "2026-03-01",
+              "recordedBy": "assistant",
+              "confirmed": false
+            }
+          ],
+          "exams": [
+            {
+              "examId": "exam-2",
+              "score": 15
+            }
+          ]
+        },
+        "2": {
+          "attendance": [],
+          "payments": [],
+          "materials": [],
+          "exams": []
+        }
+      }
+    },
+    {
+      "id": "3000",
+      "name": "سارة يوسف الشافعي",
+      "phone": "01299887766",
+      "guardianPhone": "01033445566",
+      "grade": 3,
+      "year": "2026",
+      "terms": {
+        "1": {
+          "attendance": [
+            {
+              "date": "2026-03-01",
+              "status": "present"
+            },
+            {
+              "date": "2026-03-08",
+              "status": "present"
+            }
+          ],
+          "payments": [
+            {
+              "month": "سبتمبر",
+              "status": "paid",
+              "amount": 150,
+              "paymentDate": "2026-03-01",
+              "recordedBy": "assistant",
+              "confirmed": true
+            },
+            {
+              "month": "أكتوبر",
+              "status": "paid",
+              "amount": 150,
+              "paymentDate": "2026-03-08",
+              "recordedBy": "assistant",
+              "confirmed": false
+            }
+          ],
+          "materials": [
+            {
+              "id": "m-4",
+              "name": "مذكرة المراجعة النهائية",
+              "status": "paid",
+              "price": 70,
+              "paymentDate": "2026-03-08",
+              "recordedBy": "assistant",
+              "confirmed": false
+            }
+          ],
+          "exams": [
+            {
+              "examId": "exam-3",
+              "score": 48
+            }
+          ]
+        },
+        "2": {
+          "attendance": [],
+          "payments": [],
+          "materials": [],
+          "exams": []
+        }
+      }
+    },
+    {
+      "id": "1002",
+      "name": "خالد وحيد",
+      "phone": "",
+      "guardianPhone": "",
+      "grade": 1,
+      "year": "2026",
+      "terms": {
+        "1": {
+          "attendance": [],
+          "payments": [
+            {
+              "month": "سبتمبر",
+              "status": "unpaid",
+              "amount": 150,
+              "confirmed": false
+            },
+            {
+              "month": "أكتوبر",
+              "status": "unpaid",
+              "amount": 150,
+              "confirmed": false
+            },
+            {
+              "month": "نوفمبر",
+              "status": "unpaid",
+              "amount": 150,
+              "confirmed": false
+            },
+            {
+              "month": "ديسمبر",
+              "status": "unpaid",
+              "amount": 150,
+              "confirmed": false
+            }
+          ],
+          "materials": [],
+          "exams": [
+            {
+              "examId": "exam-1",
+              "score": 20
+            }
+          ]
+        },
+        "2": {
+          "attendance": [],
+          "payments": [
+            {
+              "month": "يناير",
+              "status": "unpaid",
+              "amount": 150,
+              "confirmed": false
+            },
+            {
+              "month": "فبراير",
+              "status": "unpaid",
+              "amount": 150,
+              "confirmed": false
+            },
+            {
+              "month": "مارس",
+              "status": "unpaid",
+              "amount": 150,
+              "confirmed": false
+            },
+            {
+              "month": "أبريل",
+              "status": "unpaid",
+              "amount": 150,
+              "confirmed": false
+            },
+            {
+              "month": "مايو",
+              "status": "unpaid",
+              "amount": 150,
+              "confirmed": false
+            }
+          ],
+          "materials": [],
+          "exams": []
+        }
+      },
+      "isSuspended": false
+    },
+    {
+      "id": "2001",
+      "name": "يوسف علي",
+      "phone": "",
+      "guardianPhone": "",
+      "grade": 2,
+      "year": "2026",
+      "terms": {
+        "1": {
+          "attendance": [],
+          "payments": [
+            {
+              "month": "سبتمبر",
+              "status": "unpaid",
+              "amount": 150,
+              "confirmed": false
+            },
+            {
+              "month": "أكتوبر",
+              "status": "unpaid",
+              "amount": 150,
+              "confirmed": false
+            },
+            {
+              "month": "نوفمبر",
+              "status": "unpaid",
+              "amount": 150,
+              "confirmed": false
+            },
+            {
+              "month": "ديسمبر",
+              "status": "unpaid",
+              "amount": 150,
+              "confirmed": false
+            }
+          ],
+          "materials": [],
+          "exams": []
+        },
+        "2": {
+          "attendance": [],
+          "payments": [
+            {
+              "month": "يناير",
+              "status": "unpaid",
+              "amount": 150,
+              "confirmed": false
+            },
+            {
+              "month": "فبراير",
+              "status": "unpaid",
+              "amount": 150,
+              "confirmed": false
+            },
+            {
+              "month": "مارس",
+              "status": "unpaid",
+              "amount": 150,
+              "confirmed": false
+            },
+            {
+              "month": "أبريل",
+              "status": "unpaid",
+              "amount": 150,
+              "confirmed": false
+            },
+            {
+              "month": "مايو",
+              "status": "unpaid",
+              "amount": 150,
+              "confirmed": false
+            }
+          ],
+          "materials": [],
+          "exams": []
+        }
+      }
+    },
+    {
+      "id": "2002",
+      "name": "محمد",
+      "phone": "",
+      "guardianPhone": "",
+      "grade": 2,
+      "year": "2026",
+      "terms": {
+        "1": {
+          "attendance": [],
+          "payments": [
+            {
+              "month": "سبتمبر",
+              "status": "unpaid",
+              "amount": 150,
+              "confirmed": false
+            },
+            {
+              "month": "أكتوبر",
+              "status": "unpaid",
+              "amount": 150,
+              "confirmed": false
+            },
+            {
+              "month": "نوفمبر",
+              "status": "unpaid",
+              "amount": 150,
+              "confirmed": false
+            },
+            {
+              "month": "ديسمبر",
+              "status": "unpaid",
+              "amount": 150,
+              "confirmed": false
+            }
+          ],
+          "materials": [],
+          "exams": []
+        },
+        "2": {
+          "attendance": [],
+          "payments": [
+            {
+              "month": "يناير",
+              "status": "unpaid",
+              "amount": 150,
+              "confirmed": false
+            },
+            {
+              "month": "فبراير",
+              "status": "unpaid",
+              "amount": 150,
+              "confirmed": false
+            },
+            {
+              "month": "مارس",
+              "status": "unpaid",
+              "amount": 150,
+              "confirmed": false
+            },
+            {
+              "month": "أبريل",
+              "status": "unpaid",
+              "amount": 150,
+              "confirmed": false
+            },
+            {
+              "month": "مايو",
+              "status": "unpaid",
+              "amount": 150,
+              "confirmed": false
+            }
+          ],
+          "materials": [],
+          "exams": []
+        }
+      }
+    }
+  ],
+  "financialLogs": [
+    {
+      "id": "tx-1",
+      "studentId": "1001",
+      "studentName": "أحمد محمد علي",
+      "type": "subscription",
+      "itemName": "سبتمبر",
+      "amount": 150,
+      "recordedBy": "assistant",
+      "recordedAt": "2026-03-01T10:00:00Z",
+      "status": "received",
+      "receivedAt": "2026-03-01T14:00:00Z"
+    },
+    {
+      "id": "tx-2",
+      "studentId": "1001",
+      "studentName": "أحمد محمد علي",
+      "type": "material",
+      "itemName": "مذكرة الجبر ترم أول",
+      "amount": 50,
+      "recordedBy": "assistant",
+      "recordedAt": "2026-03-01T10:05:00Z",
+      "status": "received",
+      "receivedAt": "2026-03-01T14:00:00Z"
+    },
+    {
+      "id": "tx-3",
+      "studentId": "2000",
+      "studentName": "محمد مصطفى كامل",
+      "type": "material",
+      "itemName": "مذكرة الهندسة ترم أول",
+      "amount": 50,
+      "recordedBy": "assistant",
+      "recordedAt": "2026-03-01T10:10:00Z",
+      "status": "pending"
+    },
+    {
+      "id": "tx-4",
+      "studentId": "3000",
+      "studentName": "سارة يوسف الشافعي",
+      "type": "subscription",
+      "itemName": "أكتوبر",
+      "amount": 150,
+      "recordedBy": "assistant",
+      "recordedAt": "2026-03-08T09:30:00Z",
+      "status": "pending"
+    },
+    {
+      "id": "tx-5",
+      "studentId": "3000",
+      "studentName": "سارة يوسف الشافعي",
+      "type": "material",
+      "itemName": "مذكرة المراجعة النهائية",
+      "amount": 70,
+      "recordedBy": "assistant",
+      "recordedAt": "2026-03-08T09:35:00Z",
+      "status": "pending"
+    },
+    {
+      "id": "tx-1781782564721-s2gxx04dy",
+      "studentId": "1001",
+      "studentName": "أحمد محمد علي",
+      "type": "subscription",
+      "itemName": "سبتمبر",
+      "amount": 150,
+      "recordedBy": "mimi",
+      "recordedAt": "2026-06-18T11:36:04.721Z",
+      "status": "received",
+      "receivedAt": "2026-06-18T11:36:04.721Z"
+    }
+  ]
+}

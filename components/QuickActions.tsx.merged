@@ -1,0 +1,1386 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
+import {
+  Plus, Users, ClipboardList, FileText, QrCode, X, Loader2,
+  Calendar, Award, CheckCircle2, UserCheck, AlertTriangle, FileSpreadsheet, Printer
+} from 'lucide-react';
+
+interface QuickActionsProps {
+  onRefresh?: () => void;
+}
+
+type ModalType = 'addStudent' | 'addExam' | 'previousExams' | 'reports' | 'qrCode' | null;
+type ReportType = 'absence' | 'excuse' | 'general' | 'monthly' | 'booklets' | 'daily' | null;
+
+export default function QuickActions({ onRefresh }: QuickActionsProps) {
+  const params = useParams();
+  const year = params.year as string;
+  const term = params.term as string;
+
+  const [isOpen, setIsOpen] = useState(false);
+  const [activeModal, setActiveModal] = useState<ModalType>(null);
+  
+  // App data loaded dynamically
+  const [students, setStudents] = useState<any[]>([]);
+  const [exams, setExams] = useState<any[]>([]);
+  const [dbLoading, setDbLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  // Form States
+  // 1. Add Student
+  const [studentName, setStudentName] = useState('');
+  const [studentId, setStudentId] = useState('');
+  const [studentPhone, setStudentPhone] = useState('');
+  const [guardianPhone, setGuardianPhone] = useState('');
+  const [studentGrade, setStudentGrade] = useState<'1' | '2' | '3'>('1');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
+  const [actionLoading, setActionLoading] = useState(false);
+The application compiled successfully with zero type errors.
+
+### 2. Manual Test Cases Checked
+* **Authentication**: Login credentials verification for both roles.
+* **Reports**: Verified that all reports generate tables and correctly support native browser printing layout structure (hiding headers/sidebars, showing headers and print lines).
+* **QR Cards**: Verified QR code loading and clean alignment inside the printable card.
+
+  // 3. Previous Exams / Enter Grades
+  const [selectedExamId, setSelectedExamId] = useState('');
+  const [examScores, setExamScores] = useState<{ [studentId: string]: string }>({});
+
+  // 4. Reports
+  const [activeReport, setActiveReport] = useState<ReportType>(null);
+  const [absenceThreshold, setAbsenceThreshold] = useState(2);
+  const [excuseThreshold, setExcuseThreshold] = useState(2);
+  const [selectedReportMonth, setSelectedReportMonth] = useState('سبتمبر');
+  const [selectedReportDate, setSelectedReportDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedReportBooklet, setSelectedReportBooklet] = useState('');
+  const [allBookletNames, setAllBookletNames] = useState<string[]>([]);
+  const [generalScoreThreshold, setGeneralScoreThreshold] = useState(100);
+  const [selectedReportGrade, setSelectedReportGrade] = useState<string>('all');
+  const [reportData, setReportData] = useState<any[]>([]);
+
+  // 5. QR Code Card
+  const [selectedQrStudentId, setSelectedQrStudentId] = useState('');
+
+  // Fetch base database info
+  const loadDatabase = async () => {
+    setDbLoading(true);
+    try {
+      const res = await fetch('/api/db');
+      if (res.ok) {
+        const data = await res.json();
+        // Filter students belonging to this year
+        const yearStudents = (data.students || []).filter((s: any) => s.year === year);
+        setStudents(yearStudents);
+        
+        // Extract booklet list
+        const booklets = Array.from(
+          new Set(
+          )
+        ) as string[];
+        setAllBookletNames(booklets);
+        if (booklets.length > 0) {
+          setSelectedReportBooklet(booklets[0]);
+        }
+
+        // Filter exams belonging to this year and term
+        const yearExams = (data.exams || []).filter((e: any) => e.year === year && e.term === term);
+        setExams(yearExams);
+
+        if (yearExams.length > 0) {
+          setSelectedExamId(yearExams[0].id);
+        }
+        if (yearStudents.length > 0) {
+          setSelectedQrStudentId(yearStudents[0].id);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load DB details for quic
+// MISSING LINE 101
+// MISSING LINE 102
+// MISSING LINE 103
+// MISSING LINE 104
+// MISSING LINE 105
+// MISSING LINE 106
+// MISSING LINE 107
+// MISSING LINE 108
+// MISSING LINE 109
+// MISSING LINE 110
+// MISSING LINE 111
+// MISSING LINE 112
+// MISSING LINE 113
+// MISSING LINE 114
+// MISSING LINE 115
+// MISSING LINE 116
+// MISSING LINE 117
+// MISSING LINE 118
+// MISSING LINE 119
+  };
+
+  // 1. Submit Add Student
+  const handleAddStudent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!studentName.trim() || !studentId.trim() || !studentGrade) {
+      setErrorMsg('الاسم، الكود، والصف الدراسي حقول مطلوبة');
+      return;
+    }
+
+    setActionLoading(true);
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    try {
+      const res = await fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'addStudent',
+          student: {
+            id: studentId.trim(),
+            name: studentName.trim(),
+            phone: studentPhone.trim(),
+            guardianPhone: guardianPhone.trim(),
+            grade: Number(studentGrade),
+            year
+          }
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'حدث خطأ ما');
+
+      setSuccessMsg('تم إضافة الطالب بنجاح! 🎉');
+      setStudentName('');
+      setStudentId('');
+      setStudentPhone('');
+      setGuardianPhone('');
+      if (onRefresh) onRefresh();
+    } catch (err: any) {
+      setErrorMsg(err.message || 'فشل إضافة الطالب');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // 2. Submit Add Exam
+  const handleAddExam = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!examName.trim() || !examMaxScore || !examDate) {
+      setErrorMsg('جميع حقول الامتحان مطلوبة');
+      return;
+    }
+
+    setActionLoading(true);
+// MISSING LINE 176
+// MISSING LINE 177
+// MISSING LINE 178
+// MISSING LINE 179
+// MISSING LINE 180
+// MISSING LINE 181
+// MISSING LINE 182
+// MISSING LINE 183
+// MISSING LINE 184
+// MISSING LINE 185
+// MISSING LINE 186
+// MISSING LINE 187
+// MISSING LINE 188
+// MISSING LINE 189
+// MISSING LINE 190
+// MISSING LINE 191
+// MISSING LINE 192
+// MISSING LINE 193
+// MISSING LINE 194
+// MISSING LINE 195
+// MISSING LINE 196
+// MISSING LINE 197
+// MISSING LINE 198
+// MISSING LINE 199
+      setErrorMsg(err.message || 'فشل إضافة الامتحان');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Load scores when selected exam changes
+  useEffect(() => {
+    if (selectedExamId) {
+      const exam = exams.find(e => e.id === selectedExamId);
+      if (exam) {
+        const scoresMap: { [studentId: string]: string } = {};
+        // Find students of the matching grade
+        const targetStudents = students.filter(s => s.grade === exam.grade);
+        targetStudents.forEach(s => {
+          const scoreRecord = s.terms[term]?.exams?.find((ex: any) => ex.examId === selectedExamId);
+          scoresMap[s.id] = scoreRecord ? String(scoreRecord.score) : '';
+        });
+        setExamScores(scoresMap);
+      }
+    }
+  }, [selectedExamId, exams, students, term]);
+
+  // 3. Submit Exam Scores
+  const handleSaveScores = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setActionLoading(true);
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    try {
+      const scoresPayload = Object.entries(examScores).map(([studentId, val]) => ({
+        studentId,
+        score: val.trim() === '' ? 0 : Number(val)
+      }));
+
+      const res = await fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'enterExamScores',
+          examId: selectedExamId,
+          year,
+          term,
+          scores: scoresPayload
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'حدث خطأ ما');
+
+      setSuccessMsg('تم حفظ درجات الطلاب بنجاح! ✅');
+      if (onRefresh) onRefresh();
+    } catch (err: any) {
+      setErrorMsg(err.message || 'فشل حفظ الدرجات');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+
+  // 4. Generate Reports
+  const generateReport = () => {
+    setErrorMsg('');
+    if (!activeReport) return;
+
+    if (activeReport === 'absence') {
+      // Students with absences > threshold (exceeded maximum limit)
+      const filtered = students.filter(s => {
+        const absences = (s.terms?.[term]?.attendance || []).filter((a: any) => a.status === 'absent').length;
+        return absences > absenceThreshold;
+      }).map(s => {
+        const count = (s.terms?.[term]?.attendance || []).filter((a: any) => a.status === 'absent').length;
+        return { id: s.id, name: s.name, phone: s.phone, parentPhone: s.guardianPhone, val: count, grade: s.grade };
+      });
+      setReportData(filtered);
+    }
+
+    if (activeReport === 'excuse') {
+      // Students with excuses > threshold (exceeded maximum limit)
+      const filtered = students.filter(s => {
+        const excuses = (s.terms?.[term]?.attendance || []).filter((a: any) => a.status === 'excused').length;
+        return excuses > excuseThreshold;
+      }).map(s => {
+        const count = (s.terms?.[term]?.attendance || []).filter((a: any) => a.status === 'excused').length;
+        return { id: s.id, name: s.name, phone: s.phone, parentPhone: s.guardianPhone, val: count, grade: s.grade };
+      });
+      setReportData(filtered);
+    }
+
+    if (activeReport === 'general') {
+      // Calculate general score average for each student, filter by score threshold <=, and sort them descending
+      const computed = students.map(s => {
+        const sExams = s.terms?.[term]?.exams || [];
+        if (sExams.length === 0) return { id: s.id, name: s.name, phone: s.phone, parentPhone: s.guardianPhone, val: 0, grade: s.grade };
+
+        let totalEarned = 0;
+        let totalMax = 0;
+        sExams.forEach((exRecord: any) => {
+          const examObj = exams.find(e => e.id === exRecord.examId);
+          if (examObj) {
+// MISSING LINE 301
+// MISSING LINE 302
+// MISSING LINE 303
+// MISSING LINE 304
+// MISSING LINE 305
+// MISSING LINE 306
+// MISSING LINE 307
+// MISSING LINE 308
+// MISSING LINE 309
+// MISSING LINE 310
+// MISSING LINE 311
+// MISSING LINE 312
+// MISSING LINE 313
+    if (activeReport === 'monthly') {
+      const computed = students.map(s => {
+        const pay = s.terms?.[term]?.payments?.find((p: any) => p.month === selectedReportMonth);
+        return {
+          id: s.id,
+          name: s.name,
+          status: pay ? pay.status : 'unpaid',
+          confirmed: pay ? pay.confirmed : false,
+          grade: s.grade
+        };
+      });
+      setReportData(computed);
+    }
+
+    if (activeReport === 'booklets') {
+      const computed = students.map(s => {
+        const mat = s.terms?.[term]?.materials?.find((m: any) => m.name === selectedReportBooklet);
+        return {
+          id: s.id,
+          name: s.name,
+          status: mat ? mat.status : 'unpaid',
+          confirmed: mat ? mat.confirmed : false,
+          price: mat ? mat.price : 50,
+          grade: s.grade
+        };
+      });
+      setReportData(computed);
+    }
+
+    if (activeReport === 'daily') {
+      const computed = students.map(s => {
+        const att = s.terms?.[term]?.attendance?.find((a: any) => a.date === selectedReportDate);
+        return {
+          id: s.id,
+          name: s.name,
+          status: att ? att.status : 'غائب (غير مسجل)',
+          notes: att?.notes || '',
+          grade: s.grade
+        };
+      });
+      setReportData(computed);
+    }
+  };
+
+  useEffect(() => {
+    if (activeReport) {
+      generateReport();
+    }
+  }, [
+    activeReport,
+    absenceThreshold,
+    excuseThreshold,
+    selectedReportMonth,
+    selectedReportDate,
+    selectedReportBooklet,
+    generalScoreThreshold,
+    selectedReportBooklet,
+    generalScoreThreshold,
+    selectedReportGrade,
+    students,
+    term,
+    exams
+  ]);
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const getGradeName = (grade: number) => {
+    if (grade === 1) return 'الصف الأول الإعدادي';
+    if (grade === 2) return 'الصف الثاني الإعدادي';
+    return 'الصف الثالث الإعدادي';
+  };
+
+  const selectedQrStudent = students.find(s => s.id === selectedQrStudentId);
+
+  return (
+    <>
+      {/* Floating Action Button (FAB) */}
+      <div className="fixed bottom-8 right-8 z-40 no-print">
+        {isOpen && (
+          <div className="absolute bottom-16 right-0 mb-3 flex flex-col gap-3.5 items-end">
+            
+            {/* Action Buttons */}
+            <button
+              onClick={() => openModal('addStudent')}
+              className="flex items-center gap-3.5 rounded-2xl bg-white dark:bg-zinc-900 shadow-xl border border-zinc-200 dark:border-zinc-800 py-3 px-4.5 text-sm font-extrabold text-zinc-700 dark:text-zinc-350 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer shrink-0 transition-all hover:scale-105"
+// MISSING LINE 401
+// MISSING LINE 402
+// MISSING LINE 403
+// MISSING LINE 404
+// MISSING LINE 405
+// MISSING LINE 406
+// MISSING LINE 407
+// MISSING LINE 408
+// MISSING LINE 409
+            <button
+              onClick={() => openModal('addExam')}
+              className="flex items-center gap-3.5 rounded-2xl bg-white dark:bg-zinc-900 shadow-xl border border-zinc-200 dark:border-zinc-800 py-3 px-4.5 text-sm font-extrabold text-zinc-700 dark:text-zinc-350 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer shrink-0 transition-all hover:scale-105"
+            >
+              <span>إضافة امتحان جديد</span>
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400">
+                <ClipboardList className="h-5 w-5" />
+              </div>
+            </button>
+
+            <button
+              onClick={() => openModal('previousExams')}
+              className="flex items-center gap-3.5 rounded-2xl bg-white dark:bg-zinc-900 shadow-xl border border-zinc-200 dark:border-zinc-800 py-3 px-4.5 text-sm font-extrabold text-zinc-700 dark:text-zinc-350 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer shrink-0 transition-all hover:scale-105"
+            >
+              <span>رصد درجات الامتحانات</span>
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400">
+                <Award className="h-5 w-5" />
+              </div>
+            </button>
+
+            <button
+              onClick={() => openModal('reports')
+// MISSING LINE 432
+// MISSING LINE 433
+// MISSING LINE 434
+// MISSING LINE 435
+// MISSING LINE 436
+// MISSING LINE 437
+// MISSING LINE 438
+// MISSING LINE 439
+// MISSING LINE 440
+// MISSING LINE 441
+// MISSING LINE 442
+// MISSING LINE 443
+// MISSING LINE 444
+// MISSING LINE 445
+// MISSING LINE 446
+// MISSING LINE 447
+// MISSING LINE 448
+// MISSING LINE 449
+// MISSING LINE 450
+// MISSING LINE 451
+// MISSING LINE 452
+// MISSING LINE 453
+// MISSING LINE 454
+// MISSING LINE 455
+// MISSING LINE 456
+// MISSING LINE 457
+          }`}
+        >
+          <Plus className="h-8 w-8" />
+        </button>
+      </div>
+
+      {/* ========================================================
+          MODAL 1: ADD STUDENT
+          ======================================================== */}
+      {activeModal === 'addStudent' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 no-print">
+          <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-zinc-900 shadow-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="p-6 border-b border-zinc-150 dark:border-zinc-800 flex items-center justify-between bg-slate-50/50 dark:bg-zinc-900/50">
+              <h3 className="text-xl font-extrabold text-zinc-900 dark:text-white">إضافة طالب جديد</h3>
+              <button onClick={() => setActiveModal(null)} className="text-zinc-400 hover:text-zinc-650 cursor-pointer">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddStudent} className="p-6 space-y-4">
+              {errorMsg && <div className="p-3 text-xs bg-rose-50 border border-rose-100 dark:bg-rose-950/30 dark:border-rose-950 text-rose-600 dark:text-rose-400 rounded-xl font-bold">{errorMsg}</div>}
+              {successMsg && <div className="p-3 text-xs bg-emerald-50 border border-emerald-100 dark:bg-emerald-950/30 dark:border-emerald-950 text-emerald-600 dark:text-emerald-450 rounded-xl font-bold">{successMsg}</div>}
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-zinc-655 dark:text-zinc-350 mb-1.5">كود الطالب</label>
+                  <input
+                    type="text"
+                    value={studentId}
+                    onChange={(e) => setStudentId(e.target.value)}
+                    placeholder="مثال: 1024"
+                    className="block w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 py-2.5 px-3 text-sm text-zinc-900 dark:text-white outline-none focus:border-blue-500"
+                    disabled={actionLoading}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-zinc-655 dark:text-zinc-350 mb-1.5">الصف الدراسي</label>
+                  <select
+                    value={studentGrade}
+                    onChange={(e) => setStudentGrade(e.target.value as any)}
+                    className="block w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 py-2.5 px-3 text-sm text-zinc-900 dark:text-white outline-none focus:border-blue-500"
+                    disabled={actionLoading}
+                  >
+                    <option value="1">أولى إعدادي</option>
+                    <option value="2">ثانية إعدادي</option>
+                    <option value="3">ثالثة إعدادي</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-zinc-655 dark:text-zinc-350 mb-1.5">اسم الطالب بالكامل</label>
+                <input
+                  type="text"
+                  value={studentName}
+                  onChange={(e) => setStudentName(e.target.value)}
+                  placeholder="أدخل الاسم الرباعي"
+                  className="block w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 py-2.5 px-3 text-sm text-zinc-900 dark:text-white outline-none focus:border-blue-500"
+                  disabled={actionLoading}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+// MISSING LINE 521
+// MISSING LINE 522
+// MISSING LINE 523
+// MISSING LINE 524
+// MISSING LINE 525
+// MISSING LINE 526
+// MISSING LINE 527
+// MISSING LINE 528
+// MISSING LINE 529
+// MISSING LINE 530
+// MISSING LINE 531
+// MISSING LINE 532
+// MISSING LINE 533
+// MISSING LINE 534
+// MISSING LINE 535
+// MISSING LINE 536
+// MISSING LINE 537
+// MISSING LINE 538
+// MISSING LINE 539
+// MISSING LINE 540
+// MISSING LINE 541
+// MISSING LINE 542
+// MISSING LINE 543
+// MISSING LINE 544
+// MISSING LINE 545
+// MISSING LINE 546
+// MISSING LINE 547
+// MISSING LINE 548
+// MISSING LINE 549
+// MISSING LINE 550
+// MISSING LINE 551
+// MISSING LINE 552
+// MISSING LINE 553
+// MISSING LINE 554
+// MISSING LINE 555
+// MISSING LINE 556
+// MISSING LINE 557
+// MISSING LINE 558
+// MISSING LINE 559
+// MISSING LINE 560
+// MISSING LINE 561
+// MISSING LINE 562
+// MISSING LINE 563
+// MISSING LINE 564
+// MISSING LINE 565
+// MISSING LINE 566
+// MISSING LINE 567
+// MISSING LINE 568
+// MISSING LINE 569
+// MISSING LINE 570
+// MISSING LINE 571
+// MISSING LINE 572
+// MISSING LINE 573
+// MISSING LINE 574
+// MISSING LINE 575
+// MISSING LINE 576
+// MISSING LINE 577
+// MISSING LINE 578
+// MISSING LINE 579
+// MISSING LINE 580
+// MISSING LINE 581
+// MISSING LINE 582
+// MISSING LINE 583
+// MISSING LINE 584
+// MISSING LINE 585
+// MISSING LINE 586
+// MISSING LINE 587
+// MISSING LINE 588
+// MISSING LINE 589
+// MISSING LINE 590
+// MISSING LINE 591
+// MISSING LINE 592
+// MISSING LINE 593
+// MISSING LINE 594
+// MISSING LINE 595
+// MISSING LINE 596
+// MISSING LINE 597
+// MISSING LINE 598
+// MISSING LINE 599
+// MISSING LINE 600
+// MISSING LINE 601
+// MISSING LINE 602
+// MISSING LINE 603
+// MISSING LINE 604
+// MISSING LINE 605
+// MISSING LINE 606
+// MISSING LINE 607
+// MISSING LINE 608
+// MISSING LINE 609
+// MISSING LINE 610
+// MISSING LINE 611
+// MISSING LINE 612
+// MISSING LINE 613
+// MISSING LINE 614
+// MISSING LINE 615
+// MISSING LINE 616
+// MISSING LINE 617
+// MISSING LINE 618
+// MISSING LINE 619
+// MISSING LINE 620
+// MISSING LINE 621
+// MISSING LINE 622
+// MISSING LINE 623
+// MISSING LINE 624
+// MISSING LINE 625
+// MISSING LINE 626
+// MISSING LINE 627
+// MISSING LINE 628
+// MISSING LINE 629
+// MISSING LINE 630
+// MISSING LINE 631
+// MISSING LINE 632
+// MISSING LINE 633
+// MISSING LINE 634
+// MISSING LINE 635
+// MISSING LINE 636
+// MISSING LINE 637
+// MISSING LINE 638
+// MISSING LINE 639
+// MISSING LINE 640
+// MISSING LINE 641
+// MISSING LINE 642
+// MISSING LINE 643
+// MISSING LINE 644
+// MISSING LINE 645
+// MISSING LINE 646
+// MISSING LINE 647
+// MISSING LINE 648
+// MISSING LINE 649
+// MISSING LINE 650
+// MISSING LINE 651
+// MISSING LINE 652
+// MISSING LINE 653
+// MISSING LINE 654
+// MISSING LINE 655
+// MISSING LINE 656
+// MISSING LINE 657
+// MISSING LINE 658
+// MISSING LINE 659
+// MISSING LINE 660
+// MISSING LINE 661
+// MISSING LINE 662
+// MISSING LINE 663
+// MISSING LINE 664
+// MISSING LINE 665
+// MISSING LINE 666
+// MISSING LINE 667
+// MISSING LINE 668
+// MISSING LINE 669
+// MISSING LINE 670
+// MISSING LINE 671
+// MISSING LINE 672
+// MISSING LINE 673
+// MISSING LINE 674
+// MISSING LINE 675
+// MISSING LINE 676
+// MISSING LINE 677
+// MISSING LINE 678
+// MISSING LINE 679
+// MISSING LINE 680
+// MISSING LINE 681
+// MISSING LINE 682
+// MISSING LINE 683
+// MISSING LINE 684
+// MISSING LINE 685
+// MISSING LINE 686
+// MISSING LINE 687
+// MISSING LINE 688
+// MISSING LINE 689
+// MISSING LINE 690
+// MISSING LINE 691
+// MISSING LINE 692
+// MISSING LINE 693
+// MISSING LINE 694
+// MISSING LINE 695
+// MISSING LINE 696
+// MISSING LINE 697
+// MISSING LINE 698
+// MISSING LINE 699
+// MISSING LINE 700
+// MISSING LINE 701
+// MISSING LINE 702
+// MISSING LINE 703
+// MISSING LINE 704
+// MISSING LINE 705
+// MISSING LINE 706
+// MISSING LINE 707
+// MISSING LINE 708
+// MISSING LINE 709
+// MISSING LINE 710
+// MISSING LINE 711
+// MISSING LINE 712
+// MISSING LINE 713
+// MISSING LINE 714
+// MISSING LINE 715
+// MISSING LINE 716
+// MISSING LINE 717
+// MISSING LINE 718
+// MISSING LINE 719
+// MISSING LINE 720
+// MISSING LINE 721
+// MISSING LINE 722
+// MISSING LINE 723
+// MISSING LINE 724
+// MISSING LINE 725
+// MISSING LINE 726
+// MISSING LINE 727
+// MISSING LINE 728
+// MISSING LINE 729
+// MISSING LINE 730
+// MISSING LINE 731
+// MISSING LINE 732
+// MISSING LINE 733
+// MISSING LINE 734
+// MISSING LINE 735
+// MISSING LINE 736
+// MISSING LINE 737
+// MISSING LINE 738
+// MISSING LINE 739
+// MISSING LINE 740
+// MISSING LINE 741
+// MISSING LINE 742
+// MISSING LINE 743
+// MISSING LINE 744
+// MISSING LINE 745
+// MISSING LINE 746
+// MISSING LINE 747
+// MISSING LINE 748
+// MISSING LINE 749
+// MISSING LINE 750
+// MISSING LINE 751
+// MISSING LINE 752
+// MISSING LINE 753
+// MISSING LINE 754
+// MISSING LINE 755
+// MISSING LINE 756
+// MISSING LINE 757
+// MISSING LINE 758
+// MISSING LINE 759
+// MISSING LINE 760
+// MISSING LINE 761
+// MISSING LINE 762
+// MISSING LINE 763
+// MISSING LINE 764
+// MISSING LINE 765
+// MISSING LINE 766
+// MISSING LINE 767
+// MISSING LINE 768
+// MISSING LINE 769
+// MISSING LINE 770
+// MISSING LINE 771
+// MISSING LINE 772
+// MISSING LINE 773
+// MISSING LINE 774
+// MISSING LINE 775
+                      activeReport === r.id
+                        ? 'bg-blue-600 text-white shadow-md'
+                        : 'text-zinc-650 hover:bg-slate-200 dark:text-zinc-400 dark:hover:bg-zinc-800/40'
+                    }`}
+              <div>
+                <h3 className="text-xl font-extrabold text-zinc-900 dark:text-white">تقارير الطلاب التفصيلية</h3>
+                <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">استعرض واطبع تقارير الحضور والغياب والدرجات وحالة المدفوعات والكتب</p>
+              </div>
+              <button onClick={() => setActiveModal(null)} className="text-zinc-400 hover:text-zinc-650 cursor-pointer">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Modal Content - Left Sidebar & Right Grid layout */}
+            <div className="flex flex-1 overflow-hidden print:overflow-visible">
+              
+              {/* Left Selector (Reports menu) */}
+              <div className="w-64 bg-slate-50/80 dark:bg-zinc-900/30 border-l border-zinc-200 dark:border-zinc-800 p-4 space-y-2 shrink-0 overflow-y-auto no-print">
+                <h4 className="text-xs font-black text-zinc-450 dark:text-zinc-500 mb-3 px-2">اختر نوع التقرير</h4>
+                
+                {[
+                  { id: 'absence', label: 'تقرير غياب الطلاب', icon: AlertTriangle },
+                  { id: 'excuse', label: 'تقرير أذونات الغياب', icon: UserCheck },
+                  { id: 'general', label: 'تقرير النسبة العامة للدرجات', icon: Award },
+                  { id: 'monthly', label: '
+                    onClick={() => setActiveReport(r.id as any)}
+                    className={`w-full flex items-center gap-3 px-3.5 py-3 text-xs font-bold rounded-xl transition-all cursor-pointer text-right ${
+                ].map((r) => (
+                  <button
+                    key={r.id}
+                    onClick={() => setActiveReport(r.id as any)}
+                    className={`w-full flex items-center gap-3 px-3.5 py-3 text-xs font-bold rounded-xl transition-all cursor-pointer text-right ${
+                      activeReport === r.id
+                        ? 'bg-blue-600 text-white shadow-md'
+                        : 'text-zinc-650 hover:bg-slate-200 dark:text-zinc-400 dark:hover:bg-zinc-800/40'
+                    }`}
+                  >
+                    <r.icon className="h-4.5 w-4.5 shrink-0" />
+                    <span>{r.label}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Right Content Area (Parameters & Output Table) */}
+              <div className="flex-1 flex flex-col overflow-y-auto p-6 print:p-0 print:overflow-visible">
+                {dbLoading ? (
+                  <div className="flex justify-center items-center py-24"><Loader2 className="h-8 w-8 animate-spin text-blue-600" /></div>
+                ) : !activeReport ? (
+                  <div className="flex flex-col items-center justify-center py-24 text-zinc-455 text-center no-print">
+                    <FileText className="h-12 w-12 text-zinc-300 dark:text-zinc-700 mb-4" />
+                    <p className="font-extrabold text-base text-zinc-755 dark:text-zinc-300">لم يتم اختيار أي تقرير</p>
+                    <p className="text-xs text-zinc-400 mt-1">الرجاء اختيار أحد التقارير من القائمة الجانبية لبدء العرض</p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Report Parameters Panel */}
+                    <div className="rounded-2xl border border-zinc-150 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-950/40 p-4 mb-6 flex items-center justify-between no-print gap-4 flex-wrap">
+                      <div className="flex items-center gap-4 flex-wrap">
+                        {activeReport === 'absence' && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-zinc-650 dark:text-zinc-400">الحد الأقصى المسموح به للغياب:</span>
+                            <input
+                              type="number"
+                              min={0}
+                              value={absenceThreshold}
+                              onChange={(e) => setAbsenceThreshold(Number(e.target.value))}
+                              className="w-16 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2.5 py-1 text-xs text-center outline-none focus:border-blue-500 font-bold"
+                            />
+                          </div>
+                        )}
+
+                        {activeReport === 'excuse' && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-zinc-655 dark:text-zinc-400">الحد الأقصى المسموح به للأذونات:</span>
+                            <input
+                              type="number"
+                              min={0}
+                              value={excuseThreshold}
+                              onChange={(e) => setExcuseThreshold(Number(e.target.value))}
+                              className="w-16 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2.5 py-1 text-xs text-center outline-none focus:border-blue-500 font-bold"
+// MISSING LINE 856
+// MISSING LINE 857
+// MISSING LINE 858
+// MISSING LINE 859
+// MISSING LINE 860
+// MISSING LINE 861
+                            >
+                              <option value="سبتمبر">سبتمبر</option>
+                              <option value="أكتوبر">أكتوبر</option>
+                              <option value="نوفمبر">نوفمبر</option>
+                              <option value="ديسمبر">ديسمبر</option>
+                              <option value="يناير">يناير</option>
+                              <option value="فبراير">فبراير</option>
+                              <option value="مارس">مارس</option>
+                              <option value="أبريل">أبريل</option>
+                              <option value="مايو">مايو</option>
+                            </select>
+                          </div>
+                        )}
+
+                            >
+                              <option value="سبتمبر">سبتمبر</option>
+                              <option value="أكتوبر">أكتوبر</option>
+                              <option value="نوفمبر">نوفمبر</option>
+                              <option value="ديسمبر">ديسمبر</option>
+                              <option value="يناير">يناير</option>
+                              <option value="فبراير">فبراير</option>
+                              <option value="مارس">مارس</option>
+                              <option value="أبريل">أبريل</option>
+                              <option value="مايو">مايو</option>
+                            </select>
+                          </div>
+                        )}
+
+                        {activeReport === 'booklets' && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-zinc-650 dark:text-zinc-400 font-bold">اختر المذكرة:</span>
+                            <select
+                              value={selectedReportBooklet}
+                              onChange={(e) => setSelectedReportBooklet(e.target.value)}
+                              className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-1.5 text-xs outline-none focus:border-blue-500 font-bold text-zinc-750 text-zinc-700 dark:text-zinc-300"
+                            >
+                              {allBookletNames.length === 0 ? (
+                                <option value="">لا توجد مذكرات</option>
+                              ) : (
+                                allBookletNames.map(bName => (
+                                  <option key={bName} value={bName}>{bName}</option>
+                                ))
+                              )}
+                            </select>
+                          </div>
+                        )}
+
+                        {activeReport === 'daily' && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-zinc-655 dark:text-zinc-400">اختر التاريخ:</span>
+                            <input
+                              type="date"
+                              value={selectedReportDate}
+                              onChange={(e) => setSelectedReportDate(e.target.value)}
+                              className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-1.5 text-xs outline-none focus:border-blue-500 font-bold"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      <button
+                        onClick={handlePrint}
+                        className="flex items-center gap-2 rounded-xl bg-blue-600 text-white font-bold py-2 px-3 text-xs hover:bg-blue-700 cursor-pointer shadow-sm"
+                      >
+                        <Printer className="h-4 w-4" />
+                        <span>طباعة التقرير</span>
+                      </button>
+                    </div>
+
+                    {/* Report Output Header (Only visible in Print or as preview) */}
+                    <div className="text-center mb-8 border-b-2 border-zinc-800 pb-4 hidden print:block">
+                      <h2 className="text-3xl font-extrabold text-zinc-900">أكاديمية ميمي التعليمية</h2>
+                      <p className="text-sm text-zinc-550 mt-1">السنة الدراسية: {year} | الفصل الدراسي: {term === '1' ? 'الأول' : 'الثاني'}</p>
+                      <h3 className="text-xl font-bold text-zinc-850 mt-4 underline decoration-2 underline-offset-4">
+                        {activeReport === 'absence' && `تقرير غياب الطلاب (تجاوز غيابهم الحد الأقصى المسموح به: ${absenceThreshold} محاضرة)`}
+                        {activeReport === 'excuse' && `تقرير أذونات الطلاب (تجاوز أذوناتهم الحد الأقصى المسموح به: ${excuseThreshold} إذن)`}
+                        {activeReport === 'general' && `تقرير كشف الترتيب والنسبة العامة للطلاب (بنسبة أقل من أو تساوي ${generalScoreThreshold}%)`}
+                        {activeReport === 'monthly' && `تقرير دفع الاشتراكات لشهر: ${selectedReportMonth}`}
+                        {activeReport === 'booklets' && 'تقرير موقف دفع وتوزيع المذكرات والكتب'}
+                        {activeReport === 'daily' && `كشف الحضور اليومي للمحاضرة بتاريخ: ${selectedReportDate}`}
+                      </h3>
+                      <p className="text-xs text-zinc-400 mt-2 text-left">تاريخ استخراج التقرير: {new Date().toLocaleDateString('ar-EG')}</p>
+                    </div>
+
+                    {/* Report Data Table */}
+                    {activeReport === 'monthly' || activeReport === 'booklets' ? (
+                      <div className="space-y-8 print:space-y-6">
+                        {/* Summary Counts */}
+                        <div className="flex gap-4 no-print flex-wrap">
+                          <div className="px-4 py-2 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-450 rounded-xl border border-emerald-100 dark:border-emerald-900/20 font-bold text-xs">
+                            عدد الذين دفعوا: {reportData.filter((r: any) => r.status === 'paid').length} طالب
+                          </div>
+                          <div className="px-4 py-2 bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-455 rounded-xl border border-rose-100 dark:border-rose-900/20 font-bold text-xs">
+                            عدد الذين لم يدفعوا: {reportData.filter((r: any) => r.status !== 'paid').length} طالب
+                          </div>
+                        </div>
+
+                        {/* Paid Students Table */}
+                        <div className="border border-zinc-150 dark:border-zinc-800 rounded-2xl overflow-hidden bg-white dark:bg-zinc-955 print:border-zinc-300">
+                          <div className="bg-emerald-50/50 dark:bg-emerald-950/20 px-4 py-3 border-b border-zinc-150 dark:border-zinc-800 flex items-center justify-between">
+                            <h4 className="text-sm font-black text-emerald-700 dark:text-emerald-450">الطلاب الذين دفعوا</h4>
+                            <span className="text-xs font-bold text-emerald-600">العدد: {reportData.filter((r: any) => r.status === 'paid').length}</span>
+                          </div>
+                          <table className="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800 print:divide-zinc-300">
+                            <thead className="bg-slate-50 dark:bg-zinc-900 print:bg-slate-100">
+                              <tr>
+                                <th className="px-4 py-2.5 text-right text-xs font-bold text-zinc-500">كود</th>
+                                <th className="px-4 py-2.5 text-right text-xs font-bold text-zinc-500">الاسم</th>
+                        <div className="flex gap-4 no-print flex-wrap">
+                          <div className="px-4 py-2 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-450 rounded-xl border border-emerald-100 dark:border-emerald-900/20 font-bold text-xs">
+                            عدد الذين دفعوا: {reportData.filter((r: any) => r.status === 'paid').length} طالب
+                          </div>
+                          <div className="px-4 py-2 bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-455 rounded-xl border border-rose-100 dark:border-rose-900/20 font-bold text-xs">
+                            عدد الذين لم يدفعوا: {reportData.filter((r: any) => r.status !== 'paid').length} طالب
+                          </div>
+                        </div>
+
+                        {/* Paid Students Table */}
+                        <div className="border border-zinc-150 dark:border-zinc-800 rounded-2xl overflow-hidden bg-white dark:bg-zinc-955 print:border-zinc-300">
+                          <div className="bg-emerald-50/50 dark:bg-emerald-950/20 px-4 py-3 border-b border-zinc-150 dark:border-zinc-800 flex items-center justify-between">
+                            <h4 className="text-sm font-black text-emerald-700 dark:text-emerald-450">الطلاب الذين دفعوا</h4>
+                            <span className="text-xs font-bold text-emerald-600">العدد: {reportData.filter((r: any) => r.status === 'paid').length}</span>
+                                    <td className="px-4 py-2.5 text-xs text-center text-zinc-500">{getGradeName(row.grade)}</td>
+                                    <td className="px-4 py-2.5 text-xs text-center">
+                                      <span className={`inline-block px-2.5 py-0.5 rounded-full ${
+// MISSING LINE 987
+// MISSING LINE 988
+// MISSING LINE 989
+// MISSING LINE 990
+// MISSING LINE 991
+// MISSING LINE 992
+// MISSING LINE 993
+// MISSING LINE 994
+// MISSING LINE 995
+// MISSING LINE 996
+// MISSING LINE 997
+                                    <td className="px-4 py-3.5 text-xs text-right font-bold text-zinc-700 dark:text-zinc-300">{row.parentPhone}</td>
+                                  </>
+                                )}
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Report signatures panel (Only visible in Print) */}
+                    <div className="mt-16 flex justify-between items-center text-sm font-bold border-t border-zinc-200 pt-6 hidden print:flex">
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-zinc-150 dark:divide-zinc-850 print:divide-zinc-200">
+                              {reportData.filter((r: any) => r.status !== 'paid').length === 0 ? (
+                                <tr>
+                                  <td colSpan={4} className="text-center py-6 text-xs text-zinc-400">لا يوجد طلاب لم يدفعوا</td>
+                                </tr>
+                              ) : (
+                                reportData.filter((r: any) => r.status !== 'paid').map((row: any) => (
+                                  <tr key={row.id}>
+                                    <td className="px-4 py-2.5 text-xs font-bold text-zinc-500">{row.id}</td>
+                                    <td className="px-4 py-2.5 text-sm font-bold text-zinc-900 dark:text-white">{row.name}</td>
+                          </div>
+                          <table className="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800 print:divide-zinc-300">
+                            <thead className="bg-slate-50 dark:bg-zinc-900 print:bg-slate-100">
+                              <tr>
+                                <th className="px-4 py-2.5 text-right text-xs font-bold text-zinc-500">كود</th>
+                                <th className="px-4 py-2.5 text-right text-xs font-bold text-zinc-500">الاسم</th>
+                                <th className="px-4 py-2.5 text-center text-xs font-bold text-zinc-500">الصف الدراسي</th>
+                                <th className="px-4 py-2.5 text-center text-xs font-bold text-zinc-500">الحالة</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-zinc-150 dark:divide-zinc-850 print:divide-zinc-200">
+                              {reportData.filter((r: any) => r.status !== 'paid').length === 0 ? (
+                                <tr>
+                                  <td colSpan={4} className="text-center py-6 text-xs text-zinc-400">لا يوجد طلاب لم يدفعوا</td>
+                                </tr>
+                              ) : (
+                                reportData.filter((r: any) => r.status !== 'paid').map((row: any) => (
+                                  <tr key={row.id}>
+                                    <td className="px-4 py-2.5 text-xs font-bold text-zinc-500">{row.id}</td>
+                                    <td className="px-4 py-2.5 text-sm font-extrabold text-black dark:text-white print:text-black">{row.name}</td>
+                                    <td className="px-4 py-2.5 text-xs text-center text-zinc-500">{getGradeName(row.grade)}</td>
+                                    <td className="px-4 py-2.5 text-xs text-center">
+                                      <span className="inline-block px-2.5 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/30">
+                                        لم يتم الدفع
+                                      </span>
+                                    </td>
+                                  </tr>
+                                ))
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="border border-zinc-150 dark:border-zinc-800 rounded-2xl overflow-hidden bg-white dark:bg-zinc-955 print:border-zinc-300">
+                        <table className="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800 print:divide-zinc-300">
+                          <thead className="bg-slate-50 dark:bg-zinc-900 print:bg-slate-100">
+                            <tr>
+                              <th className="px-4 py-2.5 text-right text-xs font-bold text-zinc-500">كود</th>
+                              {activeReport !== 'daily' && (
+                                <>
+                                  <th className="px-4 py-2.5 text-center text-xs font-bold text-zinc-500">تليفون الطالب</th>
+                                  <th className="px-4 py-2.5 text-center text-xs font-bold text-zinc-500">تليفون ولي الأمر</th>
+                                </>
+                              )}
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-zinc-150 dark:divide-zinc-850 print:divide-zinc-200">
+                            {reportData.length === 0 ? (
+                              <tr>
+                                <td colSpan={activeReport =
+                    <div className="flex flex-col items-center justify-center py-6">
+                        </div>
+
+                        {/* QR Code Graphic */}
+                        <div className="bg-white p-3.5 rounded-2xl shadow-md mb-4 flex items-center justify-center border border-zinc-150 print:border-zinc-300">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+
+                              {activeReport !== 'daily' && (
+                                <>
+                                  <th className="px-4 py-2.5 text-center text-xs font-bold text-zinc-500">تليفون الطالب</th>
+                                  <th className="px-4 py-2.5 text-center text-xs font-bold text-zinc-500">تليفون ولي الأمر</th>
+                                </>
+                              )}
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-zinc-150 dark:divide-zinc-850 print:divide-zinc-200">
+                            {reportData.length === 0 ? (
+                              <tr>
+                                <td colSpan={activeReport === 'daily' ? 5 : 6} className="text-center py-6 text-xs text-zinc-400">لا توجد بيانات لعرضها</td>
+                              </tr>
+                            ) : (
+                              reportData.map((row: any) => (
+                                <tr key={row.id}>
+                                  <td className="px-4 py-2.5 text-xs font-bold text-zinc-500">{row.id}</td>
+                                  <td className="px-4 py-2.5 text-sm font-extrabold text-black dark:text-black print:text-black">{row.name}</td>
+                                  <td className="px-4 py-2.5 text-xs text-center text-zinc-500">{getGradeName(row.grade)}</td>
+                                    <>
+                                      <td className="px-4 py-2.5 text-xs text-center">
+                                        <span className={`inline-block px-2.5 py-0.5 rounded-full ${
+                                          row.status === 'present' || row.status === 'حاضر'
+                                            ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-450 border border-emerald-100 dark:border-emerald-900/30'
+                                            : row.status === 'absent' || row.status.includes('غائب')
+                                            ? 'bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-455 border border-rose-100 dark:border-rose-900/30'
+                                            : 'bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900/30'
+                                        }`}>
+                                          {row.status === 'present' ? 'حاضر' : row.status === 'absent' ? 'غائب' : row.status === 'excused' ? 'إذن' : row.status}
+                                        </span>
+                                      </td>
+                                      <td className="px-4 py-2.5 text-xs text-right text-zinc-650 dark:tex      {activeModal === 'qrCode' && (() => {
+        const gradeStudents = students.filter(s => s.grade === selectedQrGrade);
+        return (
+          <div cl
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+
+                    {/* Report signatures panel (Only visible in Print) */}
+                    <div className="mt-16 flex justify-between items-center text-sm font-bold border-t border-zinc-200 pt-6 hidden print:flex">
+                      <div>المساعد المسؤول: _______________________</div>
+                      <div>توقيع الأستاذ: _______________________</div>
+                    </div>
+                  </>
+                )}
+              </div>
+
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-6 border-t border-zinc-150 dark:border-zinc-800 flex justify-end bg-slate-50/50 dark:bg-zinc-900/50 shrink-0 no-print">
+              <button
+                type="button"
+                onClick={() => setActiveModal(null)}
+                className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white hover:bg-slate-50 dark:bg-zinc-955 text-zinc-755 dark:text-zinc-300 font-bold py-2.5 px-6 cursor-pointer text-sm"
+              >
+                إغلاق
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================
+          MOD
+
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================
+          MODAL 5: QR CODE CARD SYSTEM
+          ======================================================== */}
+      {activeModal === 'qrCode' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 print:relative print:inset-auto print:bg-transparent print:p-0">
+          <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-zinc-900 shadow-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden animate-in fade-in zoom-in-95 duration-150 flex flex-col print:border-none print:shadow-none print:rounded-none">
+            
+            {/* Modal Header */}
+            <div className="p-6 border-b border-zinc-150 dark:border-zinc-800 flex items-center justify-between bg-slate-50/50 dark:bg-zinc-900/50 shrink-0 no-print">
+              <h3 className="text-xl font-extrabold text-zinc-900 dark:text-white">بطاقة الطالب و QR Code</h3>
+              <button onClick={() => setActiveModal(null)} className="text-zinc-400 hover:text-zinc-650 cursor-pointer">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-6 flex-1 overflow-y-auto print:overflow-visible">
+              
+              {dbLoading ? (
+                <div className="flex justify-
+                      value={selectedQrStudentId}
+                      onChange={(e) => setSelectedQrStudentId(e.target.value)}
+                      className="block w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 py-2.5 px-3 text-sm text-zinc-900 dark:text-white outline-none focus:border-blue-500 font-bold"
+                    >
+                      {students.map(s => (
+                        <option key={s.id} value={s.id}>{s.name} (كود: {s.id})</option>
+// MISSING LINE 1181
+// MISSING LINE 1182
+// MISSING LINE 1183
+// MISSING LINE 1184
+// MISSING LINE 1185
+// MISSING LINE 1186
+// MISSING LINE 1187
+// MISSING LINE 1188
+// MISSING LINE 1189
+// MISSING LINE 1190
+// MISSING LINE 1191
+// MISSING LINE 1192
+// MISSING LINE 1193
+// MISSING LINE 1194
+// MISSING LINE 1195
+// MISSING LINE 1196
+// MISSING LINE 1197
+// MISSING LINE 1198
+// MISSING LINE 1199
+                        <option key={s.id} value={s.id}>{s.name} (كود: {s.id})</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* ID Card Display Wrapper */}
+                  {selectedQrStudent && (
+                    <div className="flex flex-col items-center justify-center py-6">
+                      
+                      {/* Printable ID Card Container */}
+                      <div className="print-card w-80 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-800 text-white p-6 shadow-xl flex flex-col items-center justify-between text-center relative overflow-hidden border border-indigo-700 print:w-72 print:shadow-none print:border-zinc-300 print:text-zinc-900 print:from-white print:to-white">
+                        
+                        {/* Decorative Background for Print vs Screen */}
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-8 -mt-8 print:hidden" />
+                        <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full -ml-8 -mb-8 print:hidden" />
+
+                        {/* Card Header */}
+                        <div className="mb-4 shrink-0">
+                          <h4 className="text-lg font-black tracking-wide print:text-zinc-900">أكاديمية ميمي التعليمية</h4>
+                          <p className="text-[10px] text-blue-100 dark:text-blue-200 uppercase font-black tracking-widest mt-0.5 print:text-zinc-550">بطاقة عضوية الطالب الذكية</p>
+                        </div>
+
+                        {/* QR Code Graphic */}
+                        <div className="bg-white p-3.5 rounded-2xl shadow-md mb-4 flex items-center justify-center border border-zinc-150 print:border-zinc-300">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          </div>
+                          <p className="text-[10px] text-blue-200 mt-2 font-medium print:text-zinc-500">
+                            {getGradeName(selectedQrStudent.grade)} | السنة: {year}
+                          </p>
+                        </div>
+                        
+                      </div>
+
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Modal Actions */}
+            <div className="p-6 border-t border-zinc-150 dark:border-zinc-800 flex gap-3 bg-slate-50/50 dark:bg-zinc-900/50 shrink-0 no-print">
+              <button
+                type="button"
+                onClick={handlePrint}
+                disabled={!selectedQrStudent}
+                className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-blue-600 text-white font-bold py-3 text-sm cursor-pointer disabled:opacity-50 hover:bg-blue-700 transition-all shadow-sm"
+              >
+                <Printer className="h-4 w-4" />
+                <span>طباعة الكارت / تصدير PDF</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveModal(null)}
+                className="flex-1 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white hover:bg-slate-50 dark:bg-zinc-955 text-zinc-700 dark:text-zinc-300 font-bold py-3 text-sm cursor-pointer"
+              >
+                إغلاق
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+              <button
+                type="button"
+                onClick={() => setActiveModal(null)}
+                className="flex-1 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white hover:bg-slate-50 dark:bg-zinc-955 text-zinc-700 dark:text-zinc-300 font-bold py-3 text-sm cursor-pointer"
+              >
+                إغلاق
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+// MISSING LINE 1282
+// MISSING LINE 1283
+// MISSING LINE 1284
+// MISSING LINE 1285
+// MISSING LINE 1286
+// MISSING LINE 1287
+// MISSING LINE 1288
+// MISSING LINE 1289
+// MISSING LINE 1290
+// MISSING LINE 1291
+// MISSING LINE 1292
+// MISSING LINE 1293
+// MISSING LINE 1294
+// MISSING LINE 1295
+// MISSING LINE 1296
+// MISSING LINE 1297
+// MISSING LINE 1298
+// MISSING LINE 1299
+// MISSING LINE 1300
+// MISSING LINE 1301
+// MISSING LINE 1302
+// MISSING LINE 1303
+// MISSING LINE 1304
+// MISSING LINE 1305
+// MISSING LINE 1306
+// MISSING LINE 1307
+// MISSING LINE 1308
+// MISSING LINE 1309
+// MISSING LINE 1310
+// MISSING LINE 1311
+// MISSING LINE 1312
+// MISSING LINE 1313
+// MISSING LINE 1314
+// MISSING LINE 1315
+// MISSING LINE 1316
+// MISSING LINE 1317
+// MISSING LINE 1318
+// MISSING LINE 1319
+// MISSING LINE 1320
+// MISSING LINE 1321
+// MISSING LINE 1322
+// MISSING LINE 1323
+// MISSING LINE 1324
+// MISSING LINE 1325
+// MISSING LINE 1326
+// MISSING LINE 1327
+// MISSING LINE 1328
+// MISSING LINE 1329
+// MISSING LINE 1330
+// MISSING LINE 1331
+// MISSING LINE 1332
+// MISSING LINE 1333
+// MISSING LINE 1334
+// MISSING LINE 1335
+// MISSING LINE 1336
+// MISSING LINE 1337
+// MISSING LINE 1338
+// MISSING LINE 1339
+// MISSING LINE 1340
+// MISSING LINE 1341
+// MISSING LINE 1342
+// MISSING LINE 1343
+// MISSING LINE 1344
+// MISSING LINE 1345
+// MISSING LINE 1346
+                          </div>
+                          <p className="text-[10px] text-blue-200 mt-2 font-medium print:text-zinc-500">
+                            {getGradeName(selectedQrStudent.grade)} | السنة: {year}
+                          </p>
+                        </div>
+                        
+                      </div>
+
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Modal Actions */}
+            <div className="p-6 border-t border-zinc-150 dark:border-zinc-800 flex gap-3 bg-slate-50/50 dark:bg-zinc-900/50 shrink-0 no-print">
+              <button
+                type="button"
+                onClick={handlePrint}
+                disabled={!selectedQrStudent}
+                className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-blue-600 text-white font-bold py-3 text-sm cursor-pointer disabled:opacity-50 hover:bg-blue-700 transition-all shadow-sm"
+              >
+                <Printer className="h-4 w-4" />
+                <span>طباعة الكارت / تصدير PDF</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveModal(null)}
+                className="flex-1 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white hover:bg-slate-50 dark:bg-zinc-955 text-zinc-700 dark:text-zinc-300 font-bold py-3 text-sm cursor-pointer"
+              >
+                إغلاق
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+    </>
+  );
+}

@@ -1,0 +1,370 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          action: 'enterExamScores',
+          examId: selectedExamId,
+          year,
+          term,
+          scores: scoresPayload
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'حدث خطأ ما');
+
+      setSuccessMsg('تم حفظ درجات الطلاب بنجاح! ✅');
+      if (onRefresh) onRefresh();
+    } catch (err: any) {
+      setErrorMsg(err.message || 'فشل حفظ الدرجات');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // 4. Generate Reports
+  const generateReport = () => {
+    setErrorMsg('');
+    if (!activeReport) return;
+
+    if (activeReport === 'absence') {
+      // Students with absences >= threshold
+      const filtered = students.filter(s => {
+        const absences = (s.terms[term]?.attendance || []).filter((a: any) => a.status === 'absent').length;
+        return absences >= absenceThreshold;
+      }).map(s => {
+        const count = s.terms[term].attendance.filter((a: any) => a.status === 'absent').length;
+        return { id: s.id, name: s.name, phone: s.phone, parentPhone: s.guardianPhone, val: count, grade: s.grade };
+      });
+      setReportData(filtered);
+    }
+
+    if (activeReport === 'excuse') {
+      const filtered = students.filter(s => {
+        const excuses = (s.terms[term]?.attendance || []).filter((a: any) => a.status === 'excused').length;
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          grade: s.grade
+        };
+      });
+      setReportData(computed);
+    }
+
+    if (activeReport === 'booklets') {
+      const computed = students.map(s => {
+        const mats = s.terms[term]?.materials || [];
+        const paidCount = mats.filter((m: any) => m.status === 'paid').length;
+        const totalCount = mats.length;
+        return {
+          id: s.id,
+          name: s.name,
+          val: `${paidCount} من ${totalCount}`,
+          grade: s.grade,
+          details: mats.map((m: any) => `${m.name}: ${m.status === 'paid' ? 'تم الدفع' : 'لم يتم الدفع'}`).join(' | ')
+        };
+      });
+      setReportData(computed);
+    }
+
+    if (activeReport === 'daily') {
+      const computed = students.map(s => {
+        const att = s.terms[term]?.attendance?.find((a: any) => a.date === selectedReportDate);
+        return {
+          id: s.id,
+          name: s.name,
+          status: att ? att.status : 'غائب (غير مسجل)',
+          notes: att?.notes || '',
+          grade: s.grade
+        };
+      });
+      setReportData(computed);
+    }
+  };
+
+  useEffect(() => {
+    if (activeReport) {
+      generateReport();
+    }
+  }, [activeReport, absenceThreshold, excuseThreshold, selectedReportMonth, selectedReportDate, students]);
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const getGradeName = (grade: number) => {
+    if (grade === 1) return 'الصف الأول الإعدادي';
+    if (grade === 2) return 'الصف الثاني الإعدادي';
+    return 'الصف الثالث الإعدادي';
+  };
