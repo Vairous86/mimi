@@ -1,9 +1,21 @@
 {
   "users": [
     {
+      "username": "mohamed_hamed",
+      "passwordHash": "mohamed123",
+      "name": "مستر محمد حامد",
+      "role": "admin"
+    },
+    {
+      "username": "محمد حامد",
+      "passwordHash": "mohamed123",
+      "name": "مستر محمد حامد",
+      "role": "admin"
+    },
+    {
       "username": "mimi",
       "passwordHash": "mimi123",
-      "name": "مستر ميمي",
+      "name": "مستر محمد حامد",
       "role": "admin"
     },
     {

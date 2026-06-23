@@ -95,7 +95,9 @@ const DB_PATH = path.join(process.cwd(), 'data', 'db.json');
 
 const INITIAL_MOCK_DATA: DatabaseSchema = {
   users: [
-    { username: 'mimi', passwordHash: 'mimi123', name: 'مستر ميمي', role: 'admin' },
+    { username: 'mohamed_hamed', passwordHash: 'mohamed123', name: 'مستر محمد حامد', role: 'admin' },
+    { username: 'محمد حامد', passwordHash: 'mohamed123', name: 'مستر محمد حامد', role: 'admin' },
+    { username: 'mimi', passwordHash: 'mimi123', name: 'مستر محمد حامد', role: 'admin' },
     { username: 'assistant', passwordHash: 'assistant123', name: 'أ. أحمد (المساعد)', role: 'assistant' }
   ],
   years: ['2026', '2027'],

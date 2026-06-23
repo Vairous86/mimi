@@ -66,7 +66,7 @@ export default function LoginPage() {
             <GraduationCap className="h-9 w-9" />
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-white">
-            أكاديمية ميمي
+            أكاديمية مستر محمد حامد
           </h1>
           <p className="mt-2 text-sm text-zinc-550 dark:text-zinc-400">
             نظام إدارة المجموعات والطلاب والماليات الذكي
@@ -157,7 +157,7 @@ export default function LoginPage() {
 
         {/* Hints */}
         <div className="mt-8 text-center text-xs text-zinc-400 dark:text-zinc-500 space-y-1">
-          <p>حساب المعلم: mimi / mimi123</p>
+          <p>حساب المعلم: mohamed_hamed / mohamed123</p>
           <p>حساب المساعد: assistant / assistant123</p>
         </div>
 

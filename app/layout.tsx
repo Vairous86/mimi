@@ -9,8 +9,8 @@ const almarai = Almarai({
 });
 
 export const metadata: Metadata = {
-  title: "نظام إدارة أكاديمية ميمي",
-  description: "نظام إدارة الطلاب والحضور والامتحانات والمدفوعات للأستاذ ميمي",
+  title: "نظام إدارة أكاديمية مستر محمد حامد",
+  description: "نظام إدارة الطلاب والحضور والامتحانات والمدفوعات للأستاذ محمد حامد",
 };
 
 export default function RootLayout({

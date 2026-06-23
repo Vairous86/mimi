@@ -1,5 +1,5 @@
 <?php
-// Mimi Academy API Endpoint Controller
+// Mr. Mohamed Hamed Academy API Endpoint Controller
 // Configured to accept connections from any domain (CORS Allowed)
 
 header("Access-Control-Allow-Origin: *");
@@ -641,7 +641,7 @@ if ($method === 'POST') {
 
             if (!$student) {
                 http_response_code(404);
-                echo json_encode(['error' => 'كود الطالب غير صحيح أو غير مسجل في أكاديمية ميمي']);
+                echo json_encode(['error' => 'كود الطالب غير صحيح أو غير مسجل في أكاديمية مستر محمد حامد']);
                 exit;
             }
 

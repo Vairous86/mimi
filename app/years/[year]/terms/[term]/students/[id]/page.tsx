@@ -559,7 +559,7 @@ export default function StudentDetailsPage() {
                           {p.status === 'paid' && p.paymentDate ? (
                             <div className="flex flex-col gap-0.5">
                               <span>التاريخ: {new Date(p.paymentDate).toLocaleDateString('ar-EG')}</span>
-                              <span>المسجل: {p.recordedBy === 'mimi' ? 'مستر ميمي' : 'المساعد'}</span>
+                              <span>المسجل: {p.recordedBy === 'mimi' || p.recordedBy === 'mohamed_hamed' || p.recordedBy === 'محمد حامد' ? 'مستر محمد حامد' : 'المساعد'}</span>
                             </div>
                           ) : (
                             '—'
@@ -679,7 +679,7 @@ export default function StudentDetailsPage() {
                             {m.status === 'paid' && m.paymentDate ? (
                               <div className="flex flex-col gap-0.5">
                                 <span>التاريخ: {new Date(m.paymentDate).toLocaleDateString('ar-EG')}</span>
-                                <span>المسجل: {m.recordedBy === 'mimi' ? 'مستر ميمي' : 'المساعد'}</span>
+                                <span>المسجل: {m.recordedBy === 'mimi' || m.recordedBy === 'mohamed_hamed' || m.recordedBy === 'محمد حامد' ? 'مستر محمد حامد' : 'المساعد'}</span>
                               </div>
                             ) : (
                               '—'

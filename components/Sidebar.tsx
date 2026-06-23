@@ -54,7 +54,7 @@ export default function Sidebar({ user }: SidebarProps) {
             <GraduationCap className="h-6 w-6" />
           </div>
           <div>
-            <h2 className="text-lg font-black text-zinc-900 dark:text-white leading-tight">أكاديمية ميمي</h2>
+            <h2 className="text-lg font-black text-zinc-900 dark:text-white leading-tight">أكاديمية مستر محمد حامد</h2>
             <p className="text-xs text-zinc-400 dark:text-zinc-500 font-bold mt-0.5">لوحة الإدارة</p>
           </div>
         </div>

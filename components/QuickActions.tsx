@@ -952,7 +952,7 @@ export default function QuickActions({ onRefresh }: QuickActionsProps) {
                     <div className="printable-report-area flex-1 flex flex-col">
                       {/* Report Output Header (Only visible in Print or as preview) */}
                       <div className="text-center mb-8 border-b-2 border-zinc-800 pb-4 hidden print:block">
-                      <h2 className="text-3xl font-extrabold text-zinc-900">أكاديمية ميمي التعليمية</h2>
+                      <h2 className="text-3xl font-extrabold text-zinc-900">أكاديمية مستر محمد حامد التعليمية</h2>
                       <p className="text-sm text-zinc-550 mt-1">السنة الدراسية: {year} | الفصل الدراسي: {term === '1' ? 'الأول' : 'الثاني'}</p>
                       <h3 className="text-xl font-bold text-zinc-850 mt-4 underline decoration-2 underline-offset-4">
                         {activeReport === 'absence' && `تقرير غياب الطلاب (الذين لديهم غياب أقل من أو يساوي: ${absenceThreshold} محاضرة)`}
@@ -1247,7 +1247,7 @@ export default function QuickActions({ onRefresh }: QuickActionsProps) {
 
                               {/* Card Header */}
                               <div className="mb-4 shrink-0">
-                                <h4 className="text-lg font-black tracking-wide print:text-zinc-900">أكاديمية ميمي التعليمية</h4>
+                                <h4 className="text-lg font-black tracking-wide print:text-zinc-900">أكاديمية مستر محمد حامد التعليمية</h4>
                                 <p className="text-[10px] text-blue-100 dark:text-blue-200 uppercase font-black tracking-widest mt-0.5 print:text-zinc-550">بطاقة عضوية الطالب الذكية</p>
                               </div>
 
@@ -1341,7 +1341,7 @@ export default function QuickActions({ onRefresh }: QuickActionsProps) {
                               >
                                 {/* Details */}
                                 <div className="flex-1 flex flex-col justify-center text-right pl-4">
-                                  <h4 className="text-xs font-black text-zinc-900 mb-0.5">أكاديمية ميمي التعليمية</h4>
+                                  <h4 className="text-xs font-black text-zinc-900 mb-0.5">أكاديمية مستر محمد حامد التعليمية</h4>
                                   <p className="text-[8px] text-zinc-550 uppercase font-black tracking-widest mb-3">بطاقة عضوية الطالب الذكية</p>
                                   <h3 className="text-base font-black text-zinc-900 truncate mb-1.5">{student.name}</h3>
                                   <div className="text-[10px] font-bold text-zinc-700 bg-slate-100 py-0.5 px-2.5 rounded-full w-max mb-1.5">

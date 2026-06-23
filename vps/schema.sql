@@ -1,4 +1,4 @@
--- MySQL Database Schema for Mimi Educational Academy
+-- MySQL Database Schema for Mr. Mohamed Hamed Educational Academy
 -- Create database if not exists
 CREATE DATABASE IF NOT EXISTS mimi_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE mimi_db;
@@ -117,7 +117,9 @@ CREATE TABLE IF NOT EXISTS financial_logs (
 
 -- Seed Initial Users (Plain text hashes for simplicity, as in mock setup)
 INSERT INTO users (username, passwordHash, name, role) VALUES 
-('mimi', 'mimi123', 'مستر ميمي', 'admin'),
+('mohamed_hamed', 'mohamed123', 'مستر محمد حامد', 'admin'),
+('محمد حامد', 'mohamed123', 'مستر محمد حامد', 'admin'),
+('mimi', 'mimi123', 'مستر محمد حامد', 'admin'),
 ('assistant', 'assistant123', 'أ. أحمد (المساعد)', 'assistant')
 ON DUPLICATE KEY UPDATE name=VALUES(name);
 

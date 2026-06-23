@@ -104,7 +104,7 @@ export default function ParentPortalPage() {
               <GraduationCap className="h-5.5 w-5.5" />
             </div>
             <div>
-              <span className="block font-black text-sm text-zinc-900 dark:text-white">أكاديمية ميمي التعليمية</span>
+              <span className="block font-black text-sm text-zinc-900 dark:text-white">أكاديمية مستر محمد حامد التعليمية</span>
               <span className="block text-[10px] text-zinc-400 font-bold">بوابة متابعة مستوى الطلاب لأولياء الأمور</span>
             </div>
           </div>
@@ -583,7 +583,7 @@ export default function ParentPortalPage() {
                 </div>
                 <div>
                   <h4 className="text-xs font-black text-zinc-900 dark:text-white">هل لديكم استفسارات أو ملاحظات؟</h4>
-                  <p className="text-[10px] text-zinc-400 mt-0.5 font-bold">يمكنكم التواصل المباشر مع الأستاذ ميمي أو إدارة الأكاديمية</p>
+                  <p className="text-[10px] text-zinc-400 mt-0.5 font-bold">يمكنكم التواصل المباشر مع الأستاذ محمد حامد أو إدارة الأكاديمية</p>
                 </div>
               </div>
               <div className="flex gap-3 w-full md:w-auto">
