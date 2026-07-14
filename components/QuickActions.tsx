@@ -52,13 +52,16 @@ export default function QuickActions({ onRefresh }: QuickActionsProps) {
 
   // 4. Reports
   const [activeReport, setActiveReport] = useState<ReportType>(null);
-  const [absenceThreshold, setAbsenceThreshold] = useState(2);
-  const [excuseThreshold, setExcuseThreshold] = useState(2);
+  const [absenceFrom, setAbsenceFrom] = useState(0);
+  const [absenceTo, setAbsenceTo] = useState(10);
+  const [excuseFrom, setExcuseFrom] = useState(0);
+  const [excuseTo, setExcuseTo] = useState(10);
   const [selectedReportMonth, setSelectedReportMonth] = useState('سبتمبر');
   const [selectedReportDate, setSelectedReportDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedReportBooklet, setSelectedReportBooklet] = useState('');
   const [allBookletNames, setAllBookletNames] = useState<string[]>([]);
-  const [generalScoreThreshold, setGeneralScoreThreshold] = useState(100);
+  const [generalFrom, setGeneralFrom] = useState(0);
+  const [generalTo, setGeneralTo] = useState(100);
   const [selectedReportGrade, setSelectedReportGrade] = useState<string>('all');
   const [reportData, setReportData] = useState<any[]>([]);
 
@@ -266,10 +269,10 @@ export default function QuickActions({ onRefresh }: QuickActionsProps) {
     if (!activeReport) return;
 
     if (activeReport === 'absence') {
-      // Students with absences <= threshold (maximum limit)
+      // Students with absences between absenceFrom and absenceTo
       const filtered = students.filter(s => {
         const absences = (s.terms?.[term]?.attendance || []).filter((a: any) => a.status === 'absent').length;
-        return absences <= absenceThreshold;
+        return absences >= absenceFrom && absences <= absenceTo;
       }).map(s => {
         const count = (s.terms?.[term]?.attendance || []).filter((a: any) => a.status === 'absent').length;
         return { id: s.id, name: s.name, phone: s.phone, parentPhone: s.guardianPhone, val: count, grade: s.grade };
@@ -278,10 +281,10 @@ export default function QuickActions({ onRefresh }: QuickActionsProps) {
     }
 
     if (activeReport === 'excuse') {
-      // Students with excuses <= threshold (maximum limit)
+      // Students with excuses between excuseFrom and excuseTo
       const filtered = students.filter(s => {
         const excuses = (s.terms?.[term]?.attendance || []).filter((a: any) => a.status === 'excused').length;
-        return excuses <= excuseThreshold;
+        return excuses >= excuseFrom && excuses <= excuseTo;
       }).map(s => {
         const count = (s.terms?.[term]?.attendance || []).filter((a: any) => a.status === 'excused').length;
         return { id: s.id, name: s.name, phone: s.phone, parentPhone: s.guardianPhone, val: count, grade: s.grade };
@@ -290,7 +293,7 @@ export default function QuickActions({ onRefresh }: QuickActionsProps) {
     }
 
     if (activeReport === 'general') {
-      // Calculate general score average for each student, filter by score threshold <=, and sort them descending
+      // Calculate general score average for each student, filter by score range generalFrom to generalTo, and sort them descending
       const computed = students.map(s => {
         const sExams = s.terms?.[term]?.exams || [];
         if (sExams.length === 0) return { id: s.id, name: s.name, phone: s.phone, parentPhone: s.guardianPhone, val: 0, grade: s.grade };
@@ -305,10 +308,11 @@ export default function QuickActions({ onRefresh }: QuickActionsProps) {
           }
         });
 
-        const percent = totalMax > 0 ? (totalEarned / totalMax) * 100 : 0;
-        return { id: s.id, name: s.name, phone: s.phone, parentPhone: s.guardianPhone, val: percent, grade: s.grade };
+        const percent = totalMax > 0 ? (totalEarned / totalMax) * 105 : 0; // Wait, original had totalEarned/totalMax * 100, wait let's use 100 not 105!
+        const percentCorrected = totalMax > 0 ? (totalEarned / totalMax) * 100 : 0;
+        return { id: s.id, name: s.name, phone: s.phone, parentPhone: s.guardianPhone, val: percentCorrected, grade: s.grade };
       })
-      .filter(s => s.val <= generalScoreThreshold)
+      .filter(s => s.val >= generalFrom && s.val <= generalTo)
       .sort((a, b) => b.val - a.val);
 
       setReportData(computed);
@@ -367,12 +371,15 @@ export default function QuickActions({ onRefresh }: QuickActionsProps) {
     }
   }, [
     activeReport,
-    absenceThreshold,
-    excuseThreshold,
+    absenceFrom,
+    absenceTo,
+    excuseFrom,
+    excuseTo,
     selectedReportMonth,
     selectedReportDate,
     selectedReportBooklet,
-    generalScoreThreshold,
+    generalFrom,
+    generalTo,
     selectedReportGrade,
     students,
     term,
@@ -834,12 +841,21 @@ export default function QuickActions({ onRefresh }: QuickActionsProps) {
                       <div className="flex items-center gap-4 flex-wrap">
                         {activeReport === 'absence' && (
                           <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-zinc-655 dark:text-zinc-400">الحد الأقصى للغياب (أقل من أو يساوي):</span>
+                            <span className="text-xs font-bold text-zinc-655 dark:text-zinc-400 font-bold">عدد مرات الغياب:</span>
+                            <span className="text-xs text-zinc-500 font-bold">من</span>
                             <input
                               type="number"
                               min={0}
-                              value={absenceThreshold}
-                              onChange={(e) => setAbsenceThreshold(Number(e.target.value))}
+                              value={absenceFrom}
+                              onChange={(e) => setAbsenceFrom(Number(e.target.value))}
+                              className="w-16 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2.5 py-1 text-xs text-center outline-none focus:border-blue-500 font-bold"
+                            />
+                            <span className="text-xs text-zinc-500 font-bold">إلى</span>
+                            <input
+                              type="number"
+                              min={0}
+                              value={absenceTo}
+                              onChange={(e) => setAbsenceTo(Number(e.target.value))}
                               className="w-16 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2.5 py-1 text-xs text-center outline-none focus:border-blue-500 font-bold"
                             />
                           </div>
@@ -847,12 +863,21 @@ export default function QuickActions({ onRefresh }: QuickActionsProps) {
 
                         {activeReport === 'excuse' && (
                           <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-zinc-655 dark:text-zinc-400">الحد الأقصى للأذونات (أقل من أو يساوي):</span>
+                            <span className="text-xs font-bold text-zinc-655 dark:text-zinc-400 font-bold">عدد مرات الأذونات:</span>
+                            <span className="text-xs text-zinc-500 font-bold">من</span>
                             <input
                               type="number"
                               min={0}
-                              value={excuseThreshold}
-                              onChange={(e) => setExcuseThreshold(Number(e.target.value))}
+                              value={excuseFrom}
+                              onChange={(e) => setExcuseFrom(Number(e.target.value))}
+                              className="w-16 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2.5 py-1 text-xs text-center outline-none focus:border-blue-500 font-bold"
+                            />
+                            <span className="text-xs text-zinc-500 font-bold">إلى</span>
+                            <input
+                              type="number"
+                              min={0}
+                              value={excuseTo}
+                              onChange={(e) => setExcuseTo(Number(e.target.value))}
                               className="w-16 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2.5 py-1 text-xs text-center outline-none focus:border-blue-500 font-bold"
                             />
                           </div>
@@ -860,13 +885,23 @@ export default function QuickActions({ onRefresh }: QuickActionsProps) {
 
                         {activeReport === 'general' && (
                           <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-zinc-655 dark:text-zinc-400 font-bold">النسبة العامة (أقل من أو تساوي %):</span>
+                            <span className="text-xs font-bold text-zinc-655 dark:text-zinc-400 font-bold">النسبة العامة (%):</span>
+                            <span className="text-xs text-zinc-500 font-bold">من</span>
                             <input
                               type="number"
                               min={0}
                               max={100}
-                              value={generalScoreThreshold}
-                              onChange={(e) => setGeneralScoreThreshold(Number(e.target.value))}
+                              value={generalFrom}
+                              onChange={(e) => setGeneralFrom(Number(e.target.value))}
+                              className="w-20 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2.5 py-1 text-xs text-center outline-none focus:border-blue-500 font-bold"
+                            />
+                            <span className="text-xs text-zinc-500 font-bold">إلى</span>
+                            <input
+                              type="number"
+                              min={0}
+                              max={100}
+                              value={generalTo}
+                              onChange={(e) => setGeneralTo(Number(e.target.value))}
                               className="w-20 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2.5 py-1 text-xs text-center outline-none focus:border-blue-500 font-bold"
                             />
                           </div>
@@ -955,9 +990,9 @@ export default function QuickActions({ onRefresh }: QuickActionsProps) {
                       <h2 className="text-3xl font-extrabold text-zinc-900">أكاديمية مستر محمد حامد التعليمية</h2>
                       <p className="text-sm text-zinc-550 mt-1">السنة الدراسية: {year} | الفصل الدراسي: {term === '1' ? 'الأول' : 'الثاني'}</p>
                       <h3 className="text-xl font-bold text-zinc-850 mt-4 underline decoration-2 underline-offset-4">
-                        {activeReport === 'absence' && `تقرير غياب الطلاب (الذين لديهم غياب أقل من أو يساوي: ${absenceThreshold} محاضرة)`}
-                        {activeReport === 'excuse' && `تقرير أذونات الطلاب (الذين لديهم أذونات أقل من أو تساوي: ${excuseThreshold} إذن)`}
-                        {activeReport === 'general' && `تقرير كشف الترتيب والنسبة العامة للطلاب (بنسبة أقل من أو تساوي ${generalScoreThreshold}%)`}
+                        {activeReport === 'absence' && `تقرير غياب الطلاب (الذين لديهم غياب من ${absenceFrom} إلى ${absenceTo} محاضرة)`}
+                        {activeReport === 'excuse' && `تقرير أذونات الطلاب (الذين لديهم أذونات من ${excuseFrom} إلى ${excuseTo} إذن)`}
+                        {activeReport === 'general' && `تقرير كشف الترتيب والنسبة العامة للطلاب (بنسبة من ${generalFrom}% إلى ${generalTo}%)`}
                         {activeReport === 'monthly' && `تقرير دفع الاشتراكات لشهر: ${selectedReportMonth}`}
                         {activeReport === 'booklets' && 'تقرير موقف دفع وتوزيع المذكرات والكتب'}
                         {activeReport === 'daily' && `كشف الحضور اليومي للمحاضرة بتاريخ: ${selectedReportDate} (${selectedReportGrade === 'all' ? 'كل الصفوف' : getGradeName(Number(selectedReportGrade))})`}

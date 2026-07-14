@@ -423,6 +423,12 @@ if ($method === 'POST') {
                 ]);
             }
 
+            // Remove from Financial logs on "paid -> unpaid" transition
+            if ($status !== 'paid' && $oldStatus === 'paid') {
+                $stmt = $pdo->prepare("DELETE FROM financial_logs WHERE studentId = ? AND type = 'subscription' AND itemName = ?");
+                $stmt->execute([$studentId, $month]);
+            }
+
             echo json_encode(['success' => true]);
             exit;
         }
@@ -470,6 +476,12 @@ if ($method === 'POST') {
                 $stmt->execute([
                     $logId, $studentId, $studentName, $materialName, $price, $recordedBy, date('Y-m-d H:i:s'), $logStatus, $receivedDate
                 ]);
+            }
+
+            // Remove from Financial logs on "paid -> unpaid" transition
+            if ($status !== 'paid' && $oldStatus === 'paid') {
+                $stmt = $pdo->prepare("DELETE FROM financial_logs WHERE studentId = ? AND type = 'material' AND itemName = ?");
+                $stmt->execute([$studentId, $materialName]);
             }
 
             echo json_encode(['success' => true]);
