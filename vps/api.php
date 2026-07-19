@@ -25,7 +25,7 @@ try {
 
 // Auto-migration: create groups table and modify schema for groups & attendance date type
 try {
-    $pdo->exec("CREATE TABLE IF NOT EXISTS groups (
+    $pdo->exec("CREATE TABLE IF NOT EXISTS `groups` (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
         time VARCHAR(50) NOT NULL,
@@ -35,7 +35,7 @@ try {
 
     $checkCol = $pdo->query("SHOW COLUMNS FROM students LIKE 'groupId'");
     if ($checkCol->rowCount() === 0) {
-        $pdo->exec("ALTER TABLE students ADD COLUMN groupId INT NULL, ADD FOREIGN KEY (groupId) REFERENCES groups(id) ON DELETE SET NULL ON UPDATE CASCADE");
+        $pdo->exec("ALTER TABLE students ADD COLUMN groupId INT NULL, ADD FOREIGN KEY (groupId) REFERENCES `groups`(id) ON DELETE SET NULL ON UPDATE CASCADE");
     }
 
     $checkType = $pdo->query("SHOW COLUMNS FROM attendance LIKE 'date'");
@@ -65,7 +65,7 @@ if ($method === 'GET') {
         rsort($years); // Sort years descending
 
         // Fetch Groups
-        $stmt = $pdo->query("SELECT * FROM groups");
+        $stmt = $pdo->query("SELECT * FROM `groups`");
         $groupsRaw = $stmt->fetchAll();
         $groups = [];
         foreach ($groupsRaw as $g) {
@@ -802,7 +802,7 @@ if ($method === 'POST') {
                 exit;
             }
 
-            $stmt = $pdo->prepare("INSERT INTO groups (name, time, grade, year) VALUES (?, ?, ?, ?)");
+            $stmt = $pdo->prepare("INSERT INTO `groups` (name, time, grade, year) VALUES (?, ?, ?, ?)");
             $stmt->execute([$name, $time, $grade, $year]);
 
             echo json_encode(['success' => true]);
@@ -818,7 +818,7 @@ if ($method === 'POST') {
                 exit;
             }
 
-            $stmt = $pdo->prepare("DELETE FROM groups WHERE id = ?");
+            $stmt = $pdo->prepare("DELETE FROM `groups` WHERE id = ?");
             $stmt->execute([$id]);
 
             echo json_encode(['success' => true]);
