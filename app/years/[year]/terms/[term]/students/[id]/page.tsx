@@ -316,10 +316,46 @@ export default function StudentDetailsPage() {
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-2.5 mt-2 text-xs font-semibold text-zinc-400 dark:text-zinc-500">
+              <div className="flex items-center gap-2.5 mt-2 text-xs font-semibold text-zinc-400 dark:text-zinc-500 flex-wrap">
                 <span className="inline-block py-0.5 px-2 bg-slate-50 dark:bg-zinc-950 rounded-lg">كود: {student.id}</span>
                 <span className="h-1 w-1 bg-zinc-300 rounded-full" />
                 <span>{getGradeName(student.grade)}</span>
+                <span className="h-1 w-1 bg-zinc-300 rounded-full" />
+                <div className="flex items-center gap-1.5">
+                  <span>المجموعة:</span>
+                  <select
+                    value={student.groupId || ''}
+                    onChange={async (e) => {
+                      const newGroupId = e.target.value;
+                      setActionLoading(true);
+                      try {
+                        await fetch('https://phpcolour.com/social/social1/mimi/api.php', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            action: 'updateStudentGroup',
+                            studentId: student.id,
+                            groupId: newGroupId === '' ? null : Number(newGroupId)
+                          })
+                        });
+                        handleRefresh();
+                      } catch (err) {
+                        console.error(err);
+                      } finally {
+                        setActionLoading(false);
+                      }
+                    }}
+                    disabled={actionLoading}
+                    className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 py-0.5 px-1.5 text-[11px] font-bold outline-none focus:border-blue-500 text-zinc-700 dark:text-zinc-300 cursor-pointer"
+                  >
+                    <option value="">بدون مجموعة</option>
+                    {(db.groups || [])
+                      .filter((g: any) => g.grade === student.grade && g.year === year)
+                      .map((g: any) => (
+                        <option key={g.id} value={g.id}>{g.name} ({g.time})</option>
+                      ))}
+                  </select>
+                </div>
               </div>
 
               {/* Contact numbers */}
@@ -446,7 +482,21 @@ export default function StudentDetailsPage() {
                 </div>
                 
                 <button
-                  onClick={() => submitAttendance(newAttDate, newAttStatus, newAttNotes)}
+                  onClick={() => {
+                    const getTodayDateString = () => {
+                      const d = new Date();
+                      const y = d.getFullYear();
+                      const m = String(d.getMonth() + 1).padStart(2, '0');
+                      const day = String(d.getDate()).padStart(2, '0');
+                      return `${y}-${m}-${day}`;
+                    };
+                    let finalDate = newAttDate;
+                    if (newAttDate === getTodayDateString()) {
+                      const timeStr = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+                      finalDate = `${newAttDate} (${timeStr})`;
+                    }
+                    submitAttendance(finalDate, newAttStatus, newAttNotes);
+                  }}
                   disabled={actionLoading}
                   className="flex items-center gap-1.5 rounded-xl bg-blue-600 text-white font-bold py-2 px-4 text-xs cursor-pointer shadow-sm disabled:opacity-50"
                 >

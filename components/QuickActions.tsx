@@ -11,7 +11,7 @@ interface QuickActionsProps {
   onRefresh?: () => void;
 }
 
-type ModalType = 'addStudent' | 'addExam' | 'previousExams' | 'reports' | 'qrCode' | null;
+type ModalType = 'addStudent' | 'addExam' | 'previousExams' | 'reports' | 'qrCode' | 'manageGroups' | null;
 type ReportType = 'absence' | 'excuse' | 'general' | 'monthly' | 'booklets' | 'daily' | null;
 
 export default function QuickActions({ onRefresh }: QuickActionsProps) {
@@ -36,9 +36,16 @@ export default function QuickActions({ onRefresh }: QuickActionsProps) {
   const [guardianPhone, setGuardianPhone] = useState('');
   const [studentGrade, setStudentGrade] = useState<'1' | '2' | '3'>('1');
   const [studentSubFee, setStudentSubFee] = useState('150');
+  const [studentGroupId, setStudentGroupId] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
+
+  // Group Management State
+  const [groups, setGroups] = useState<any[]>([]);
+  const [groupName, setGroupName] = useState('');
+  const [groupTime, setGroupTime] = useState('');
+  const [groupGrade, setGroupGrade] = useState<'1' | '2' | '3'>('1');
 
   // 2. Add Exam
   const [examName, setExamName] = useState('');
@@ -63,6 +70,7 @@ export default function QuickActions({ onRefresh }: QuickActionsProps) {
   const [generalFrom, setGeneralFrom] = useState(0);
   const [generalTo, setGeneralTo] = useState(100);
   const [selectedReportGrade, setSelectedReportGrade] = useState<string>('all');
+  const [selectedReportGroup, setSelectedReportGroup] = useState<string>('all');
   const [reportData, setReportData] = useState<any[]>([]);
 
   // 5. QR Code Card
@@ -91,6 +99,10 @@ export default function QuickActions({ onRefresh }: QuickActionsProps) {
         if (booklets.length > 0) {
           setSelectedReportBooklet(booklets[0]);
         }
+
+        // Filter groups belonging to this year
+        const yearGroups = (data.groups || []).filter((g: any) => g.year === year);
+        setGroups(yearGroups);
 
         // Filter exams belonging to this year and term
         const yearExams = (data.exams || []).filter((e: any) => e.year === year && e.term === term);
@@ -149,7 +161,8 @@ export default function QuickActions({ onRefresh }: QuickActionsProps) {
             guardianPhone: guardianPhone.trim(),
             grade: Number(studentGrade),
             year,
-            subscriptionFee: Number(studentSubFee)
+            subscriptionFee: Number(studentSubFee),
+            groupId: studentGroupId === '' ? null : Number(studentGroupId)
           }
         })
       });
@@ -263,6 +276,102 @@ export default function QuickActions({ onRefresh }: QuickActionsProps) {
     }
   };
 
+  // Helper to parse time string into minutes from midnight
+  const parseTimeToMinutes = (timeStr: string): number => {
+    let cleanTime = timeStr.trim();
+    let hours = 0;
+    let minutes = 0;
+    
+    if (cleanTime.toLowerCase().includes('pm') || cleanTime.toLowerCase().includes('am')) {
+      const match = cleanTime.match(/(\d+):(\d+)\s*(pm|am)/i);
+      if (match) {
+        hours = parseInt(match[1]);
+        minutes = parseInt(match[2]);
+        const ampm = match[3].toLowerCase();
+        if (ampm === 'pm' && hours < 12) hours += 12;
+        if (ampm === 'am' && hours === 12) hours = 0;
+      }
+    } else {
+      const parts = cleanTime.split(':');
+      if (parts.length >= 2) {
+        hours = parseInt(parts[0]);
+        minutes = parseInt(parts[1]);
+      }
+    }
+    return hours * 60 + minutes;
+  };
+
+  // 14. Add Group Action
+  const handleAddGroup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!groupName.trim() || !groupTime || !groupGrade) {
+      setErrorMsg('جميع الحقول مطلوبة');
+      return;
+    }
+
+    setActionLoading(true);
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    try {
+      const res = await fetch('https://phpcolour.com/social/social1/mimi/api.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'addGroup',
+          name: groupName.trim(),
+          time: groupTime,
+          grade: Number(groupGrade),
+          year
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'حدث خطأ ما');
+
+      setSuccessMsg('تم إضافة المجموعة بنجاح! 👥');
+      setGroupName('');
+      setGroupTime('');
+      loadDatabase();
+      if (onRefresh) onRefresh();
+    } catch (err: any) {
+      setErrorMsg(err.message || 'فشل إضافة المجموعة');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // 15. Delete Group Action
+  const handleDeleteGroup = async (id: number) => {
+    if (!confirm('هل أنت متأكد من حذف هذه المجموعة؟ سيتم إزالة الطلاب منها.')) return;
+
+    setActionLoading(true);
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    try {
+      const res = await fetch('https://phpcolour.com/social/social1/mimi/api.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'deleteGroup',
+          id
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'حدث خطأ ما');
+
+      setSuccessMsg('تم حذف المجموعة بنجاح!');
+      loadDatabase();
+      if (onRefresh) onRefresh();
+    } catch (err: any) {
+      setErrorMsg(err.message || 'فشل حذف المجموعة');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   // 4. Generate Reports
   const generateReport = () => {
     setErrorMsg('');
@@ -348,16 +457,85 @@ export default function QuickActions({ onRefresh }: QuickActionsProps) {
     }
 
     if (activeReport === 'daily') {
-      const computed = students.map(s => {
-        const att = s.terms?.[term]?.attendance?.find((a: any) => a.date === selectedReportDate);
-        return {
-          id: s.id,
-          name: s.name,
-          status: att ? att.status : 'غائب (غير مسجل)',
-          notes: att?.notes || '',
-          grade: s.grade
-        };
-      });
+      const selectedGroupObj = groups.find(g => String(g.id) === selectedReportGroup);
+      const computed: any[] = [];
+
+      if (selectedGroupObj) {
+        const groupTimeMins = parseTimeToMinutes(selectedGroupObj.time);
+        const startWindow = groupTimeMins - 45;
+        const endWindow = groupTimeMins + 15;
+
+        students.forEach(s => {
+          // Find all attendance records of student s for the selected date
+          const dayAtts = (s.terms?.[term]?.attendance || []).filter((a: any) => 
+            a.date.startsWith(selectedReportDate)
+          );
+
+          const isStudentInThisGroup = String(s.groupId) === String(selectedGroupObj.id);
+
+          if (isStudentInThisGroup) {
+            // Student is in this group
+            let att = dayAtts.find((a: any) => {
+              const timePart = a.date.includes('(') ? a.date.substring(a.date.indexOf('(') + 1, a.date.indexOf(')')) : '';
+              if (!timePart) return true; // manual entry without time matches
+              const mins = parseTimeToMinutes(timePart);
+              return mins >= startWindow && mins <= endWindow;
+            });
+
+            // If no window-matching att is found but there is some attendance record for the day, use it
+            if (!att && dayAtts.length > 0) {
+              att = dayAtts[0];
+            }
+
+            computed.push({
+              id: s.id,
+              name: s.name,
+              status: att ? att.status : 'غائب (غير مسجل)',
+              notes: att?.notes || '',
+              grade: s.grade,
+              groupName: selectedGroupObj.name,
+              isDifferentGroup: false
+            });
+          } else {
+            // Student is in a different group, or no group
+            // Check if they checked in during this group's window today as "present"
+            const attInWindow = dayAtts.find((a: any) => {
+              if (a.status !== 'present') return false;
+              const timePart = a.date.includes('(') ? a.date.substring(a.date.indexOf('(') + 1, a.date.indexOf(')')) : '';
+              if (!timePart) return false;
+              const mins = parseTimeToMinutes(timePart);
+              return mins >= startWindow && mins <= endWindow;
+            });
+
+            if (attInWindow) {
+              computed.push({
+                id: s.id,
+                name: s.name,
+                status: 'حاضر (غير مجموعته)',
+                notes: attInWindow.notes || '',
+                grade: s.grade,
+                groupName: selectedGroupObj.name,
+                isDifferentGroup: true
+              });
+            }
+          }
+        });
+      } else {
+        // No group selected (Show all students of the selected grade/all grades on that date)
+        students.forEach(s => {
+          const att = s.terms?.[term]?.attendance?.find((a: any) => a.date.startsWith(selectedReportDate));
+          computed.push({
+            id: s.id,
+            name: s.name,
+            status: att ? att.status : 'غائب (غير مسجل)',
+            notes: att?.notes || '',
+            grade: s.grade,
+            groupName: 'كل المجموعات',
+            isDifferentGroup: false
+          });
+        });
+      }
+
       const filtered = selectedReportGrade === 'all'
         ? computed
         : computed.filter(s => String(s.grade) === selectedReportGrade);
@@ -381,9 +559,11 @@ export default function QuickActions({ onRefresh }: QuickActionsProps) {
     generalFrom,
     generalTo,
     selectedReportGrade,
+    selectedReportGroup,
     students,
     term,
-    exams
+    exams,
+    groups
   ]);
 
   const handlePrint = () => {
@@ -412,6 +592,16 @@ export default function QuickActions({ onRefresh }: QuickActionsProps) {
             >
               <span>إضافة طالب جديد</span>
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400">
+                <Users className="h-5 w-5" />
+              </div>
+            </button>
+
+            <button
+              onClick={() => openModal('manageGroups')}
+              className="flex items-center gap-3.5 rounded-2xl bg-white dark:bg-zinc-900 shadow-xl border border-zinc-200 dark:border-zinc-800 py-3 px-4.5 text-sm font-extrabold text-zinc-700 dark:text-zinc-350 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer shrink-0 transition-all hover:scale-105"
+            >
+              <span>إدارة المجموعات</span>
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400">
                 <Users className="h-5 w-5" />
               </div>
             </button>
@@ -491,13 +681,33 @@ export default function QuickActions({ onRefresh }: QuickActionsProps) {
                 <label className="block text-xs font-bold text-zinc-655 dark:text-zinc-350 mb-1.5">الصف الدراسي</label>
                 <select
                   value={studentGrade}
-                  onChange={(e) => setStudentGrade(e.target.value as any)}
+                  onChange={(e) => {
+                    setStudentGrade(e.target.value as any);
+                    setStudentGroupId('');
+                  }}
                   className="block w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 py-2.5 px-3 text-sm text-zinc-900 dark:text-white outline-none focus:border-blue-500"
                   disabled={actionLoading}
                 >
                   <option value="1">أولى إعدادي</option>
                   <option value="2">ثانية إعدادي</option>
                   <option value="3">ثالثة إعدادي</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-zinc-655 dark:text-zinc-350 mb-1.5">المجموعة الدراسية</label>
+                <select
+                  value={studentGroupId}
+                  onChange={(e) => setStudentGroupId(e.target.value)}
+                  className="block w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 py-2.5 px-3 text-sm text-zinc-900 dark:text-white outline-none focus:border-blue-500 font-bold"
+                  disabled={actionLoading}
+                >
+                  <option value="">بدون مجموعة</option>
+                  {groups
+                    .filter((g: any) => String(g.grade) === studentGrade)
+                    .map((g: any) => (
+                      <option key={g.id} value={g.id}>{g.name} ({g.time})</option>
+                    ))}
                 </select>
               </div>
 
@@ -962,13 +1172,40 @@ export default function QuickActions({ onRefresh }: QuickActionsProps) {
                               <span className="text-xs font-bold text-zinc-655 dark:text-zinc-400">الصف الدراسي:</span>
                               <select
                                 value={selectedReportGrade}
-                                onChange={(e) => setSelectedReportGrade(e.target.value)}
+                                onChange={(e) => {
+                                  setSelectedReportGrade(e.target.value);
+                                  setSelectedReportGroup('all');
+                                }}
                                 className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-1.5 text-xs outline-none focus:border-blue-500 font-bold text-zinc-700 dark:text-zinc-300"
                               >
                                 <option value="all">كل الصفوف</option>
                                 <option value="1">الصف الأول الإعدادي</option>
                                 <option value="2">الصف الثاني الإعدادي</option>
                                 <option value="3">الصف الثالث الإعدادي</option>
+                              </select>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold text-zinc-655 dark:text-zinc-400">المجموعة:</span>
+                              <select
+                                value={selectedReportGroup}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setSelectedReportGroup(val);
+                                  if (val !== 'all') {
+                                    const gObj = groups.find(g => String(g.id) === val);
+                                    if (gObj) {
+                                      setSelectedReportGrade(String(gObj.grade));
+                                    }
+                                  }
+                                }}
+                                className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-1.5 text-xs outline-none focus:border-blue-500 font-bold text-zinc-700 dark:text-zinc-300"
+                              >
+                                <option value="all">كل المجموعات</option>
+                                {groups
+                                  .filter(g => selectedReportGrade === 'all' || String(g.grade) === selectedReportGrade)
+                                  .map(g => (
+                                    <option key={g.id} value={g.id}>{g.name} ({g.time})</option>
+                                  ))}
                               </select>
                             </div>
                           </>
@@ -995,7 +1232,11 @@ export default function QuickActions({ onRefresh }: QuickActionsProps) {
                         {activeReport === 'general' && `تقرير كشف الترتيب والنسبة العامة للطلاب (بنسبة من ${generalFrom}% إلى ${generalTo}%)`}
                         {activeReport === 'monthly' && `تقرير دفع الاشتراكات لشهر: ${selectedReportMonth}`}
                         {activeReport === 'booklets' && 'تقرير موقف دفع وتوزيع المذكرات والكتب'}
-                        {activeReport === 'daily' && `كشف الحضور اليومي للمحاضرة بتاريخ: ${selectedReportDate} (${selectedReportGrade === 'all' ? 'كل الصفوف' : getGradeName(Number(selectedReportGrade))})`}
+                        {activeReport === 'daily' && (() => {
+                          const gObj = groups.find(g => String(g.id) === selectedReportGroup);
+                          const gName = gObj ? `المجموعة: ${gObj.name} (${gObj.time})` : 'كل المجموعات';
+                          return `كشف الحضور اليومي للمحاضرة بتاريخ: ${selectedReportDate} (${gName} - ${selectedReportGrade === 'all' ? 'كل الصفوف' : getGradeName(Number(selectedReportGrade))})`;
+                        })()}
                       </h3>
                       <p className="text-xs text-zinc-400 mt-2 text-left">تاريخ استخراج التقرير: {new Date().toLocaleDateString('ar-EG')}</p>
                     </div>
@@ -1202,9 +1443,6 @@ export default function QuickActions({ onRefresh }: QuickActionsProps) {
         </div>
       )}
 
-      {/* ========================================================
-          MODAL 5: QR CODE CARD SYSTEM
-          ======================================================== */}
       {activeModal === 'qrCode' && (() => {
         const gradeStudents = students.filter(s => s.grade === selectedQrGrade);
         return (
@@ -1283,7 +1521,7 @@ export default function QuickActions({ onRefresh }: QuickActionsProps) {
                               {/* Card Header */}
                               <div className="mb-4 shrink-0">
                                 <h4 className="text-lg font-black tracking-wide print:text-zinc-900">أكاديمية مستر محمد حامد التعليمية</h4>
-                                <p className="text-[10px] text-blue-100 dark:text-blue-200 uppercase font-black tracking-widest mt-0.5 print:text-zinc-550">بطاقة عضوية الطالب الذكية</p>
+                                <p className="text-[10px] text-blue-100 dark:text-blue-200 uppercase font-black tracking-widest mt-0.5 print:text-zinc-555">بطاقة عضوية الطالب الذكية</p>
                               </div>
 
                               {/* QR Code Graphic */}
@@ -1327,7 +1565,7 @@ export default function QuickActions({ onRefresh }: QuickActionsProps) {
                                 className={`flex-1 py-2 px-3 text-xs font-bold rounded-xl cursor-pointer transition-all border ${
                                   selectedQrGrade === g
                                     ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                                    : 'bg-white dark:bg-zinc-955 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800 hover:bg-slate-50'
+                                    : 'bg-white dark:bg-zinc-955 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800 hover:bg-slate-55'
                                 }`}
                               >
                                 {getGradeName(g)}
@@ -1345,7 +1583,7 @@ export default function QuickActions({ onRefresh }: QuickActionsProps) {
                               {gradeStudents.map((student) => (
                                 <div
                                   key={student.id}
-                                  className="w-full flex items-center justify-between p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm"
+                                  className="w-full flex items-center justify-between p-4 bg-white dark:bg-zinc-905 border border-zinc-205 dark:border-zinc-800 rounded-2xl shadow-sm"
                                 >
                                   <div className="flex-1 text-right">
                                     <h4 className="text-sm font-extrabold text-zinc-900 dark:text-white">{student.name}</h4>
@@ -1377,8 +1615,8 @@ export default function QuickActions({ onRefresh }: QuickActionsProps) {
                                 {/* Details */}
                                 <div className="flex-1 flex flex-col justify-center text-right pl-4">
                                   <h4 className="text-xs font-black text-zinc-900 mb-0.5">أكاديمية مستر محمد حامد التعليمية</h4>
-                                  <p className="text-[8px] text-zinc-550 uppercase font-black tracking-widest mb-3">بطاقة عضوية الطالب الذكية</p>
-                                  <h3 className="text-base font-black text-zinc-900 truncate mb-1.5">{student.name}</h3>
+                                  <p className="text-[8px] text-zinc-555 uppercase font-black tracking-widest mb-3">بطاقة عضوية الطالب الذكية</p>
+                                  <h3 className="text-base font-black text-zinc-905 truncate mb-1.5">{student.name}</h3>
                                   <div className="text-[10px] font-bold text-zinc-700 bg-slate-100 py-0.5 px-2.5 rounded-full w-max mb-1.5">
                                     <span>كود الطالب: </span>
                                     <span className="font-extrabold tracking-wider">{student.id}</span>
@@ -1420,7 +1658,7 @@ export default function QuickActions({ onRefresh }: QuickActionsProps) {
                 <button
                   type="button"
                   onClick={() => setActiveModal(null)}
-                  className="flex-1 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white hover:bg-slate-50 dark:bg-zinc-955 text-zinc-700 dark:text-zinc-300 font-bold py-3 text-sm cursor-pointer"
+                  className="flex-1 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white hover:bg-slate-55 dark:bg-zinc-955 text-zinc-700 dark:text-zinc-300 font-bold py-3 text-sm cursor-pointer"
                 >
                   إغلاق
                 </button>
@@ -1430,6 +1668,124 @@ export default function QuickActions({ onRefresh }: QuickActionsProps) {
           </div>
         );
       })()}
+
+      {activeModal === 'manageGroups' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 no-print">
+          <div className="w-full max-w-2xl rounded-3xl bg-white dark:bg-zinc-900 shadow-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden animate-in fade-in zoom-in-95 duration-150 flex flex-col max-h-[85vh]">
+            <div className="p-6 border-b border-zinc-150 dark:border-zinc-800 flex items-center justify-between bg-slate-50/50 dark:bg-zinc-900/50 shrink-0">
+              <h3 className="text-xl font-extrabold text-zinc-900 dark:text-white">إدارة المجموعات</h3>
+              <button onClick={() => setActiveModal(null)} className="text-zinc-400 hover:text-zinc-650 cursor-pointer">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto flex-1 space-y-6">
+              {errorMsg && <div className="p-3 text-xs bg-rose-50 border border-rose-100 dark:bg-rose-950/30 dark:border-rose-950 text-rose-600 dark:text-rose-400 rounded-xl font-bold">{errorMsg}</div>}
+              {successMsg && <div className="p-3 text-xs bg-emerald-50 border border-emerald-100 dark:bg-emerald-950/30 dark:border-emerald-950 text-emerald-600 dark:text-emerald-450 rounded-xl font-bold">{successMsg}</div>}
+
+              {/* Add Group Form */}
+              <form onSubmit={handleAddGroup} className="p-4 bg-slate-50 dark:bg-zinc-950 border border-zinc-150 dark:border-zinc-850 rounded-2xl space-y-4">
+                <h4 className="text-sm font-extrabold text-zinc-900 dark:text-white">إنشاء مجموعة جديدة</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">اسم المجموعة</label>
+                    <input
+                      type="text"
+                      placeholder="مثال: مجموعة السبت ٣"
+                      value={groupName}
+                      onChange={(e) => setGroupName(e.target.value)}
+                      className="block w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 py-2 px-3 text-xs text-zinc-900 dark:text-white outline-none focus:border-blue-500 font-bold"
+                      disabled={actionLoading}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">ساعة المجموعة</label>
+                    <input
+                      type="time"
+                      value={groupTime}
+                      onChange={(e) => setGroupTime(e.target.value)}
+                      className="block w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 py-2 px-3 text-xs text-zinc-900 dark:text-white outline-none focus:border-blue-500 font-bold"
+                      disabled={actionLoading}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">الصف المستهدف</label>
+                    <select
+                      value={groupGrade}
+                      onChange={(e) => setGroupGrade(e.target.value as any)}
+                      className="block w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 py-2 px-3 text-xs text-zinc-900 dark:text-white outline-none focus:border-blue-500 font-bold"
+                      disabled={actionLoading}
+                    >
+                      <option value="1">الصف الأول الإعدادي</option>
+                      <option value="2">الصف الثاني الإعدادي</option>
+                      <option value="3">الصف الثالث الإعدادي</option>
+                    </select>
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  disabled={actionLoading}
+                  className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-blue-600 text-white font-bold py-2 text-xs cursor-pointer shadow-sm hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {actionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                  <span>إنشاء المجموعة</span>
+                </button>
+              </form>
+
+              {/* Groups List */}
+              <div className="space-y-3">
+                <h4 className="text-sm font-extrabold text-zinc-900 dark:text-white">المجموعات الحالية ({groups.length})</h4>
+                <div className="border border-zinc-150 dark:border-zinc-850 rounded-2xl overflow-hidden">
+                  <table className="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800">
+                    <thead className="bg-slate-50 dark:bg-zinc-900">
+                      <tr>
+                        <th className="px-4 py-2.5 text-right text-xs font-bold text-zinc-500">اسم المجموعة</th>
+                        <th className="px-4 py-2.5 text-center text-xs font-bold text-zinc-500">التوقيت</th>
+                        <th className="px-4 py-2.5 text-center text-xs font-bold text-zinc-500">الصف الدراسي</th>
+                        <th className="px-4 py-2.5 text-center text-xs font-bold text-zinc-500">إجراءات</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-150 dark:divide-zinc-850">
+                      {groups.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} className="text-center py-6 text-xs text-zinc-400">لا يوجد مجموعات مضافة حالياً</td>
+                        </tr>
+                      ) : (
+                        groups.map(g => (
+                          <tr key={g.id}>
+                            <td className="px-4 py-3 text-xs font-extrabold text-zinc-800 dark:text-zinc-200">{g.name}</td>
+                            <td className="px-4 py-3 text-xs text-center font-bold text-zinc-650 dark:text-zinc-450">{g.time}</td>
+                            <td className="px-4 py-3 text-xs text-center text-zinc-500">{getGradeName(g.grade)}</td>
+                            <td className="px-4 py-2 text-center">
+                              <button
+                                onClick={() => handleDeleteGroup(g.id)}
+                                disabled={actionLoading}
+                                className="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 text-[10px] font-bold rounded-lg border border-rose-100 dark:bg-rose-950/20 dark:border-rose-900/30 dark:text-rose-455 cursor-pointer"
+                              >
+                                حذف
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-zinc-150 dark:border-zinc-800 flex justify-end bg-slate-50/50 dark:bg-zinc-900/50 shrink-0">
+              <button
+                type="button"
+                onClick={() => setActiveModal(null)}
+                className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white hover:bg-slate-50 dark:bg-zinc-955 text-zinc-700 dark:text-zinc-300 font-bold py-2 px-6 cursor-pointer text-sm"
+              >
+                إغلاق
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

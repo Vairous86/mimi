@@ -23,6 +23,30 @@ try {
     // Ignore migration errors to avoid breaking API
 }
 
+// Auto-migration: create groups table and modify schema for groups & attendance date type
+try {
+    $pdo->exec("CREATE TABLE IF NOT EXISTS groups (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        time VARCHAR(50) NOT NULL,
+        grade INT NOT NULL,
+        year VARCHAR(10) NOT NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+
+    $checkCol = $pdo->query("SHOW COLUMNS FROM students LIKE 'groupId'");
+    if ($checkCol->rowCount() === 0) {
+        $pdo->exec("ALTER TABLE students ADD COLUMN groupId INT NULL, ADD FOREIGN KEY (groupId) REFERENCES groups(id) ON DELETE SET NULL ON UPDATE CASCADE");
+    }
+
+    $checkType = $pdo->query("SHOW COLUMNS FROM attendance LIKE 'date'");
+    $colInfo = $checkType->fetch();
+    if ($colInfo && strpos(strtolower($colInfo['Type']), 'date') !== false && strpos(strtolower($colInfo['Type']), 'varchar') === false) {
+        $pdo->exec("ALTER TABLE attendance MODIFY COLUMN date VARCHAR(100) NOT NULL");
+    }
+} catch (Exception $e) {
+    // Ignore migration errors to avoid breaking API
+}
+
 $method = $_SERVER['REQUEST_METHOD'];
 
 // ==========================================
@@ -39,6 +63,16 @@ if ($method === 'GET') {
         $yearsRaw = $stmt->fetchAll();
         $years = array_column($yearsRaw, 'year');
         rsort($years); // Sort years descending
+
+        // Fetch Groups
+        $stmt = $pdo->query("SELECT * FROM groups");
+        $groupsRaw = $stmt->fetchAll();
+        $groups = [];
+        foreach ($groupsRaw as $g) {
+            $g['id'] = (int)$g['id'];
+            $g['grade'] = (int)$g['grade'];
+            $groups[] = $g;
+        }
 
         // 3. Fetch Exams
         $stmt = $pdo->query("SELECT * FROM exams");
@@ -117,6 +151,7 @@ if ($method === 'GET') {
             $sId = $s['id'];
             $s['grade'] = (int)$s['grade'];
             $s['isSuspended'] = (bool)$s['isSuspended'];
+            $s['groupId'] = isset($s['groupId']) && $s['groupId'] !== null ? (int)$s['groupId'] : null;
 
             $s['terms'] = [
                 '1' => [
@@ -140,7 +175,8 @@ if ($method === 'GET') {
             'years' => $years,
             'students' => $students,
             'exams' => $exams,
-            'financialLogs' => $financialLogs
+            'financialLogs' => $financialLogs,
+            'groups' => $groups
         ]);
 
     } catch (Exception $e) {
@@ -247,8 +283,10 @@ if ($method === 'POST') {
 
             $subscriptionFee = isset($student['subscriptionFee']) ? (int)$student['subscriptionFee'] : 150;
 
+            $groupId = isset($student['groupId']) && $student['groupId'] !== '' ? (int)$student['groupId'] : null;
+
             // Insert Student
-            $stmt = $pdo->prepare("INSERT INTO students (id, name, phone, guardianPhone, grade, year, isSuspended, subscriptionFee) VALUES (?, ?, ?, ?, ?, ?, 0, ?)");
+            $stmt = $pdo->prepare("INSERT INTO students (id, name, phone, guardianPhone, grade, year, isSuspended, subscriptionFee, groupId) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)");
             $stmt->execute([
                 $generatedId,
                 $student['name'],
@@ -256,7 +294,8 @@ if ($method === 'POST') {
                 $student['guardianPhone'] ?? '',
                 $gradeNum,
                 $student['year'],
-                $subscriptionFee
+                $subscriptionFee,
+                $groupId
             ]);
 
             // Add default unpaid payments for Term 1 (Sept, Oct, Nov, Dec)
@@ -300,6 +339,7 @@ if ($method === 'POST') {
                     'year' => $student['year'],
                     'isSuspended' => false,
                     'subscriptionFee' => $subscriptionFee,
+                    'groupId' => $groupId,
                     'terms' => $termsData
                 ]
             ]);
@@ -330,6 +370,10 @@ if ($method === 'POST') {
             if ($phone !== null) { $updates[] = "phone = ?"; $params[] = $phone; }
             if ($guardianPhone !== null) { $updates[] = "guardianPhone = ?"; $params[] = $guardianPhone; }
             if ($grade !== null) { $updates[] = "grade = ?"; $params[] = (int)$grade; }
+            if (array_key_exists('groupId', $body)) {
+                $updates[] = "groupId = ?";
+                $params[] = $body['groupId'] === '' || $body['groupId'] === null ? null : (int)$body['groupId'];
+            }
 
             if (count($updates) > 0) {
                 $params[] = $id;
@@ -742,6 +786,54 @@ if ($method === 'POST') {
                 'student' => $student,
                 'exams' => $exams
             ]);
+            exit;
+        }
+
+        // 14. ACTION: ADD GROUP
+        if ($action === 'addGroup') {
+            $name = $body['name'] ?? '';
+            $time = $body['time'] ?? '';
+            $grade = (int)($body['grade'] ?? 1);
+            $year = $body['year'] ?? '';
+
+            if (!$name || !$time || !$year) {
+                http_response_code(400);
+                echo json_encode(['error' => 'بيانات المجموعة غير مكتملة']);
+                exit;
+            }
+
+            $stmt = $pdo->prepare("INSERT INTO groups (name, time, grade, year) VALUES (?, ?, ?, ?)");
+            $stmt->execute([$name, $time, $grade, $year]);
+
+            echo json_encode(['success' => true]);
+            exit;
+        }
+
+        // 15. ACTION: DELETE GROUP
+        if ($action === 'deleteGroup') {
+            $id = (int)($body['id'] ?? 0);
+            if (!$id) {
+                http_response_code(400);
+                echo json_encode(['error' => 'معرف المجموعة مطلوب']);
+                exit;
+            }
+
+            $stmt = $pdo->prepare("DELETE FROM groups WHERE id = ?");
+            $stmt->execute([$id]);
+
+            echo json_encode(['success' => true]);
+            exit;
+        }
+
+        // 16. ACTION: UPDATE STUDENT GROUP
+        if ($action === 'updateStudentGroup') {
+            $studentId = $body['studentId'] ?? '';
+            $groupId = isset($body['groupId']) && $body['groupId'] !== '' ? (int)$body['groupId'] : null;
+
+            $stmt = $pdo->prepare("UPDATE students SET groupId = ? WHERE id = ?");
+            $stmt->execute([$groupId, $studentId]);
+
+            echo json_encode(['success' => true]);
             exit;
         }
 

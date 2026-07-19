@@ -54,6 +54,7 @@ export interface Student {
   grade: 1 | 2 | 3; // 1 = First Prep, 2 = Second Prep, 3 = Third Prep
   year: string; // e.g. "2026"
   isSuspended?: boolean;
+  groupId?: number | null;
   terms: {
     '1': TermData;
     '2': TermData;
@@ -68,6 +69,14 @@ export interface Exam {
   date: string;
   year: string;
   term: '1' | '2';
+}
+
+export interface Group {
+  id: number;
+  name: string;
+  time: string;
+  grade: number;
+  year: string;
 }
 
 export interface FinancialLog {
@@ -89,6 +98,7 @@ export interface DatabaseSchema {
   students: Student[];
   exams: Exam[];
   financialLogs: FinancialLog[];
+  groups: Group[];
 }
 
 const DB_PATH = path.join(process.cwd(), 'data', 'db.json');
@@ -267,7 +277,8 @@ const INITIAL_MOCK_DATA: DatabaseSchema = {
       recordedAt: '2026-03-08T09:35:00Z',
       status: 'pending'
     }
-  ]
+  ],
+  groups: []
 };
 
 // Synchronous helper functions with automatic database initialization

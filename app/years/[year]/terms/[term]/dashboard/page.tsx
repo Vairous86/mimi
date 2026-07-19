@@ -64,7 +64,7 @@ export default function DashboardPage() {
   // Let's find all dates in database for this year/term
   const allAttDates = Array.from(
     new Set(
-      yearStudents.flatMap((s: any) => (s.terms[term]?.attendance || []).map((a: any) => a.date))
+      yearStudents.flatMap((s: any) => (s.terms[term]?.attendance || []).map((a: any) => a.date.split(' ')[0]))
     )
   ).sort((a: any, b: any) => b.localeCompare(a)) as string[]; // latest first
 
@@ -75,7 +75,7 @@ export default function DashboardPage() {
   let excusedToday = 0;
 
   yearStudents.forEach((s: any) => {
-    const attRecord = s.terms[term]?.attendance?.find((a: any) => a.date === targetDate);
+    const attRecord = s.terms[term]?.attendance?.find((a: any) => a.date.startsWith(targetDate));
     if (attRecord) {
       if (attRecord.status === 'present') presentToday++;
       else if (attRecord.status === 'absent') absentToday++;

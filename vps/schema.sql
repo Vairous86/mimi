@@ -16,7 +16,17 @@ CREATE TABLE IF NOT EXISTS years (
     year VARCHAR(10) PRIMARY KEY
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 3. Students Table
+-- 3. Groups Table
+CREATE TABLE IF NOT EXISTS groups (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    time VARCHAR(50) NOT NULL,
+    grade INT NOT NULL,
+    year VARCHAR(10) NOT NULL,
+    FOREIGN KEY (year) REFERENCES years(year) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 4. Students Table
 CREATE TABLE IF NOT EXISTS students (
     id VARCHAR(50) PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -26,14 +36,16 @@ CREATE TABLE IF NOT EXISTS students (
     year VARCHAR(10) NOT NULL,
     isSuspended TINYINT(1) DEFAULT 0,
     subscriptionFee INT DEFAULT 150,
-    FOREIGN KEY (year) REFERENCES years(year) ON UPDATE CASCADE
+    groupId INT NULL,
+    FOREIGN KEY (year) REFERENCES years(year) ON UPDATE CASCADE,
+    FOREIGN KEY (groupId) REFERENCES groups(id) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 4. Attendance Table
+-- 5. Attendance Table
 CREATE TABLE IF NOT EXISTS attendance (
     id INT AUTO_INCREMENT PRIMARY KEY,
     studentId VARCHAR(50) NOT NULL,
-    date DATE NOT NULL,
+    date VARCHAR(100) NOT NULL,
     status ENUM('present', 'absent', 'excused') NOT NULL,
     notes TEXT,
     term ENUM('1', '2') NOT NULL,

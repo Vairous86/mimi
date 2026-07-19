@@ -207,34 +207,44 @@ export default function StudentsDirectoryPage() {
           </div>
         ) : (
           <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {sortedStudents.map((student: any) => (
-              <div
-                key={student.id}
-                onClick={() => router.push(`/years/${year}/terms/${term}/students/${student.id}`)}
-                className="group bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-5 shadow-sm hover:shadow-xl hover:border-blue-500 dark:hover:border-blue-500 hover:-translate-y-1 cursor-pointer transition-all duration-300 flex items-center justify-between"
-              >
-                <div className="flex items-center gap-4 min-w-0">
-                  {/* Decorative Initials */}
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 font-extrabold shadow-inner group-hover:scale-110 transition-transform">
-                    {student.name[0]}
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="text-base font-extrabold text-zinc-900 dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                      {student.name}
-                    </h3>
-                    <div className="flex items-center gap-2.5 mt-1.5 text-xs text-zinc-400 dark:text-zinc-500 font-semibold flex-wrap">
-                      <span>كود: <strong className="text-zinc-650 dark:text-zinc-350">{student.id}</strong></span>
-                      <span className="h-1 w-1 bg-zinc-300 rounded-full" />
-                      <span>{getGradeName(student.grade)}</span>
-                      {student.isSuspended && (
-                        <>
-                          <span className="h-1 w-1 bg-zinc-300 rounded-full" />
-                          <span className="text-rose-600 dark:text-rose-400 font-extrabold bg-rose-50 dark:bg-rose-950/20 px-2 py-0.5 rounded-full border border-rose-100 dark:border-rose-900/30">مطرود</span>
-                        </>
-                      )}
+            {sortedStudents.map((student: any) => {
+              const groupObj = (db.groups || []).find((g: any) => g.id === student.groupId);
+              return (
+                <div
+                  key={student.id}
+                  onClick={() => router.push(`/years/${year}/terms/${term}/students/${student.id}`)}
+                  className="group bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-5 shadow-sm hover:shadow-xl hover:border-blue-500 dark:hover:border-blue-500 hover:-translate-y-1 cursor-pointer transition-all duration-300 flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-4 min-w-0">
+                    {/* Decorative Initials */}
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 font-extrabold shadow-inner group-hover:scale-110 transition-transform">
+                      {student.name[0]}
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-base font-extrabold text-zinc-900 dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                        {student.name}
+                      </h3>
+                      <div className="flex items-center gap-2.5 mt-1.5 text-xs text-zinc-400 dark:text-zinc-500 font-semibold flex-wrap">
+                        <span>كود: <strong className="text-zinc-650 dark:text-zinc-350">{student.id}</strong></span>
+                        <span className="h-1 w-1 bg-zinc-300 rounded-full" />
+                        <span>{getGradeName(student.grade)}</span>
+                        {groupObj && (
+                          <>
+                            <span className="h-1 w-1 bg-zinc-300 rounded-full" />
+                            <span className="text-purple-600 dark:text-purple-450 font-bold bg-purple-50 dark:bg-purple-950/20 px-2 py-0.5 rounded-full border border-purple-100 dark:border-purple-900/30">
+                              {groupObj.name} ({groupObj.time})
+                            </span>
+                          </>
+                        )}
+                        {student.isSuspended && (
+                          <>
+                            <span className="h-1 w-1 bg-zinc-300 rounded-full" />
+                            <span className="text-rose-600 dark:text-rose-450 font-extrabold bg-rose-50 dark:bg-rose-950/20 px-2 py-0.5 rounded-full border border-rose-100 dark:border-rose-900/30">مطرود</span>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
                 
                 {/* Score wheel & suspension/arrow indicator */}
                 <div className="flex items-center gap-3">
@@ -262,7 +272,7 @@ export default function StudentsDirectoryPage() {
                   </div>
                 </div>
               </div>
-            ))}
+            )})}
           </section>
         )}
 
